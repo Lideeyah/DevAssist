@@ -1,0 +1,1 @@
+export type userType = "individual" | "team" | "business"
