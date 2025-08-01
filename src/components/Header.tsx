@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
    Sun,
    Moon,
-   Zap,
    Settings,
    CreditCard,
    Globe,
@@ -11,6 +10,7 @@ import {
    LogOut,
 } from "lucide-react";
 import { User as UserType } from "../App";
+import Logo from "../assets/logo-blue.svg"
 
 interface HeaderProps {
    isDarkTheme: boolean;
@@ -169,13 +169,12 @@ const Header: React.FC<HeaderProps> = ({
    return (
       <header className="h-12 bg-white dark:bg-[#1C2128] border-b border-gray-200 dark:border-[#30363D] flex items-center justify-between px-4 relative">
          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-               <div className="w-6 h-6 bg-gradient-to-br from-[#2563EB] to-[#7C3AED] rounded-sm flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-white" />
-               </div>
-               <span className="font-bold text-lg text-gray-900 dark:text-white">
-                  DevAssist
-               </span>
+            <div className="shrink-0 w-20 sm:w-28">
+               <img 
+                  src={Logo}
+                  alt="logo"
+                  className="size-full object-contain"
+               />
             </div>
 
             {/* View Switcher */}
