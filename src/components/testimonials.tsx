@@ -10,31 +10,31 @@ const reviews = [
    {
       name: "Mercy Fola",
       role: "Team Lead @Supreme devs",
-      body: "My team is thriving thanks you DevAssist. We are able to collaborate and shit efficiently.",
+      body: "My team is thriving thanks you DevAssist. We are able to collaborate and ship efficiently.",
       img: "https://avatar.vercel.sh/jill",
    },
    {
       name: "John",
       role: "@john",
-      body: "My team is thriving thanks you DevAssist. We are able to collaborate and shit efficiently.",
+      body: "My team is thriving thanks you DevAssist. We are able to collaborate and ship efficiently.",
       img: "https://avatar.vercel.sh/john",
    },
    {
       name: "Jane",
       role: "@jane",
-      body: "My team is thriving thanks you DevAssist. We are able to collaborate and shit efficiently.",
+      body: "My team is thriving thanks you DevAssist. We are able to collaborate and ship efficiently.",
       img: "https://avatar.vercel.sh/jane",
    },
    {
       name: "Jenny",
       role: "@jenny",
-      body: "My team is thriving thanks you DevAssist. We are able to collaborate and shit efficiently.",
+      body: "My team is thriving thanks you DevAssist. We are able to collaborate and ship efficiently.",
       img: "https://avatar.vercel.sh/jenny",
    },
    {
       name: "James",
       role: "@james",
-      body: "My team is thriving thanks you DevAssist. We are able to collaborate and shit efficiently.",
+      body: "My team is thriving thanks you DevAssist. We are able to collaborate and ship efficiently.",
       img: "https://avatar.vercel.sh/james",
    },
 ];

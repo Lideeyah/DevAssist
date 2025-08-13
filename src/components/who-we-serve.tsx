@@ -3,12 +3,14 @@ import { Icon } from "@iconify/react";
 const whoweserve = [
    {
       icon: (
-         <Icon
-            icon="solar:code-circle-bold-duotone"
-            width="24"
-            height="24"
-            className="text-blue-600 size-20"
-         />
+         <div className="size-20 grid place-items-center bg-primary/20 rounded-full">
+            <Icon
+               icon="solar:code-linear"
+               width="24"
+               height="24"
+               className="text-primary size-10"
+            />
+         </div>
       ),
       title: "Developers",
       features: [
@@ -21,12 +23,14 @@ const whoweserve = [
    },
    {
       icon: (
-         <Icon
-            icon="solar:users-group-two-rounded-bold-duotone"
-            width="24"
-            height="24"
-            className="text-rose-600 size-20"
-         />
+         <div className="size-20 grid place-items-center bg-primary/20 rounded-full">
+            <Icon
+               icon="solar:users-group-two-rounded-linear"
+               width="24"
+               height="24"
+               className="text-primary size-10"
+            />
+         </div>
       ),
       title: "Teams",
       features: [
@@ -39,12 +43,14 @@ const whoweserve = [
    },
    {
       icon: (
-         <Icon
-            icon="solar:shop-2-bold-duotone"
-            width="24"
-            height="24"
-            className="text-emerald-600 size-20"
-         />
+         <div className="size-20 grid place-items-center bg-primary/20 rounded-full">
+            <Icon
+               icon="solar:shop-2-linear"
+               width="24"
+               height="24"
+               className="text-primary size-10"
+            />
+         </div>
       ),
       title: "Businesses/SMEs",
       features: [
