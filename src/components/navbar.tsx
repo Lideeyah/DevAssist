@@ -40,10 +40,10 @@ export default function Navbar() {
 
          {!data?.session ? (
             <div className="flex gap-4">
-               <Button asChild variant="outline">
+               <Button asChild variant="outline" size={"lg"}>
                   <Link to="/auth/sign-up">Sign Up</Link>
                </Button>
-               <Button asChild>
+               <Button asChild size={"lg"}>
                   <Link to="/auth/sign-in">Sign In</Link>
                </Button>
             </div>

@@ -12,6 +12,7 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { SiGithub } from "react-icons/si";
 
 export function SignUpForm({
    className,
@@ -171,7 +172,7 @@ export function SignUpForm({
                      className="w-full"
                      disabled={isSubmitting}
                   >
-                     <Icon icon="hugeicons:github" width="24" height="24" />
+                     <SiGithub />
                      Continue with Github
                   </Button>
                </div>

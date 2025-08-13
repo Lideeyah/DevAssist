@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router";
 import Logo from "../logo";
 import { Icon } from "@iconify/react";
+import { SiGithub } from "react-icons/si"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignIn, TSignIn } from "@/validators/sign-in";
@@ -26,7 +27,7 @@ export function LoginForm({
    });
 
    const [isVisible, setIsVisible] = useState(false);
-   
+
    const navigate = useNavigate();
 
    const togglePasswordVisibility = () =>
@@ -156,7 +157,7 @@ export function LoginForm({
                      className="w-full"
                      disabled={isSubmitting}
                   >
-                     <Icon icon="hugeicons:github" width="24" height="24" />
+                     <SiGithub />
                      Continue with Github
                   </Button>
                </div>
