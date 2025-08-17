@@ -40,7 +40,6 @@ export function LoginForm({
                email: data.email,
                password: data.password,
                rememberMe: true,
-               callbackURL: `${import.meta.env.VITE_FRONTEND_URL}/dashboard`
             },
             {
                onSuccess: () => {

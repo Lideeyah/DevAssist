@@ -40,7 +40,6 @@ export function SignUpForm({
                email: data.email,
                password: data.password,
                name: data.name,
-               callbackURL: `${import.meta.env.VITE_FRONTEND_URL}/dashboard`,
             },
             {
                onSuccess: () => {
