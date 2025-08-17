@@ -49,7 +49,7 @@ export default function Testimonials() {
          <div className="relative flex w-full flex-col items-center justify-center overflow-hidden mt-12 md:mt-16">
             <Marquee pauseOnHover className="[--duration:20s]">
                {reviews.map((review) => (
-                  <div className="w-80 bg-secondary/20 px-4 py-6 rounded-lg border">
+                  <div key={review.name} className="w-80 bg-secondary/20 px-4 py-6 rounded-lg border">
                      <div className="flex flex-row items-center gap-2">
                         <img
                            className="rounded-full"

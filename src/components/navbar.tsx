@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import Logo from "./logo";
 import { Button } from "./ui/button";
 import { authClient } from "@/lib/auth-client";
-import { UserAvatar } from "./profile-picture";
+import UserDropdown from "./user-dropdow";
 
 const navLinks = [
    {
@@ -38,7 +38,7 @@ export default function Navbar() {
             ))}
          </ul>
 
-         {!data?.session ? (
+         {!data?.user ? (
             <div className="flex gap-4">
                <Button asChild variant="outline" size={"lg"}>
                   <Link to="/auth/sign-up">Sign Up</Link>
@@ -48,10 +48,7 @@ export default function Navbar() {
                </Button>
             </div>
          ) : (
-            <UserAvatar
-               name={data.user.name}
-               image={data.user.image ?? undefined}
-            />
+            <UserDropdown user={data.user} align="end" />
          )}
       </nav>
    );

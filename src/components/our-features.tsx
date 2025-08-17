@@ -30,7 +30,7 @@ export default function OurFeatures() {
          
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12 md:mt-16">
             {features.map((feature) => (
-               <div className="bg-secondary/20 p-6 rounded-lg border">
+               <div className="bg-secondary/20 p-6 rounded-lg border" key={feature.title}>
                   <h3 className="text-xl md:text-2xl font-semibold tracking-tight">{feature.title}</h3>
                   <p className="text-muted-foreground font-medium mt-3">{feature.description}</p>
                </div>
