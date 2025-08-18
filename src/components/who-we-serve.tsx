@@ -1,66 +1,5 @@
+import { whoweserve } from "@/lib/const";
 import { Icon } from "@iconify/react";
-
-const whoweserve = [
-   {
-      icon: (
-         <div className="size-20 grid place-items-center bg-primary/20 rounded-full">
-            <Icon
-               icon="solar:code-linear"
-               width="24"
-               height="24"
-               className="text-primary size-10"
-            />
-         </div>
-      ),
-      title: "Developers",
-      features: [
-         "Real-time code suggestions (GPT/Claude/DeepSeek)",
-         "Bug Fix Assistant with auto debug",
-         "Voice-to-text coding support",
-         "Auto-generate README and documentation",
-         "Session management and auto backup",
-      ],
-   },
-   {
-      icon: (
-         <div className="size-20 grid place-items-center bg-primary/20 rounded-full">
-            <Icon
-               icon="solar:users-group-two-rounded-linear"
-               width="24"
-               height="24"
-               className="text-primary size-10"
-            />
-         </div>
-      ),
-      title: "Teams",
-      features: [
-         "Everything in Developer",
-         "Collaborative coding (Code Live Share)",
-         "Team chat and comment sidebar",
-         "AI insights on team performance",
-         "Shared folders and repositories",
-      ],
-   },
-   {
-      icon: (
-         <div className="size-20 grid place-items-center bg-primary/20 rounded-full">
-            <Icon
-               icon="solar:shop-2-linear"
-               width="24"
-               height="24"
-               className="text-primary size-10"
-            />
-         </div>
-      ),
-      title: "Businesses/SMEs",
-      features: [
-         '"Describe Your Business" AI Wizard',
-         "Auto-generate websites and logos",
-         "E-commerce and booking integration",
-         "Domain management integration",
-      ],
-   },
-];
 
 export default function WhoWeServe() {
    return (
@@ -84,7 +23,12 @@ export default function WhoWeServe() {
                   <ul className="grid gap-4 text-muted-foreground mt-8 font-medium">
                      {item.features.map((feature) => (
                         <li className="flex items-start gap-2">
-                           <Icon icon="solar:check-circle-linear" width="24" height="24" className="shrink-0 size-4 mt-1 text-emerald-400" />
+                           <Icon
+                              icon="solar:check-circle-linear"
+                              width="24"
+                              height="24"
+                              className="shrink-0 size-4 mt-1 text-emerald-400"
+                           />
                            <span>{feature}</span>
                         </li>
                      ))}
