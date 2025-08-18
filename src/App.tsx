@@ -10,6 +10,10 @@ import Dashboard from "@/pages/dashboard";
 import OnboardingLayout from "@/pages/onboarding/layout";
 import SelectCountry from "@/pages/onboarding/select-country";
 import SelectPath from "@/pages/onboarding/select-path";
+import DashboardLayout from "./pages/dashboard/layout";
+import { Suspense } from "react";
+import Overview from "@/pages/dashboard/overview";
+import Settings from "@/pages/dashboard/settings";
 
 export default function App() {
    const data = "authClient.useSession()";
@@ -26,6 +30,26 @@ export default function App() {
                <Route index element={<Navigate to="country" replace />} />
                <Route path="country" element={<SelectCountry />} />
                <Route path="path" element={<SelectPath />} />
+            </Route>
+
+            <Route path="/dashboard" element={<DashboardLayout />}>
+               <Route index element={<Navigate to="overview" replace />} />
+               <Route
+                  path="overview"
+                  element={
+                     <Suspense fallback={<div>Loading overview…</div>}>
+                        <Overview />
+                     </Suspense>
+                  }
+               />
+               <Route
+                  path="settings"
+                  element={
+                     <Suspense fallback={<div>Loading settings…</div>}>
+                        <Settings />
+                     </Suspense>
+                  }
+               />
             </Route>
 
             <Route
