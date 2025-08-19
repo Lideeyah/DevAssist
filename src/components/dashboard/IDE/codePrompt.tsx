@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2 } from "lucide-react";
-import SplitPane from "react-split-pane-next";
+import SplitPane from "react-split-pane";
 import { Button } from "@/components/ui/button";
 import EditorIDE from "./EditorIDE";
 
 export default function CodePrompt() {
-  const [isFullScreen, setIsFullScreen] = useState(true);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [deviceSize, setDeviceSize] = useState<"desktop" | "laptop" | "phone">("desktop");
   const [splitSize, setSplitSize] = useState(310);
   const [activeTab, setActiveTab] = useState<"code" | "preview">("preview");
