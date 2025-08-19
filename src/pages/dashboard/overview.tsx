@@ -1,10 +1,15 @@
+import DashboardHistory from "@/components/dashboard/Overview/dashboardHistory";
+import DashboardOverview from "@/components/dashboard/Overview/dashboardOverview";
+import SubHeading from "@/components/dashboard/Overview/SubHeading";
+
 export default function Overview() {
-   return (
-      <div>
-         <h2 className="text-2xl font-semibold">Overview</h2>
-         <p className="mt-4 text-muted-foreground">
-            Welcome to your dashboard.
-         </p>
+  return (
+    <div className="w-full">
+      <div className="">
+        <SubHeading />
+        <DashboardHistory />
+        <DashboardOverview />
       </div>
-   );
+    </div>
+  );
 }
