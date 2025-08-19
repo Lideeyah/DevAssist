@@ -11,6 +11,10 @@ export default function EditorIDE() {
   };
 
   return (
+    <div className="w-full max-w-2xl rounded-sm border overflow-hidden h-[calc(100vh-198px)] pb-4">
+      <SplitPane split="vertical" minSize={200} maxSize={-200} defaultSize="30%" className="!overflow-vidible rounded-sm pb-10 w-full max-w-5xl mx-6">
+        {/* Left - Monaco Editor */}
+        <div className="flex flex-col rounded-l-sm  h-full bg-black text-white w-full">
     <div className="h-screen w-screen">
       <SplitPane split="vertical" minSize={200} defaultSize="40%">
         {/* Left - Monaco Editor */}
@@ -21,11 +25,24 @@ export default function EditorIDE() {
               Run
             </button>
           </div>
-          <Editor height="100%" defaultLanguage="markdown" theme="vs-dark" value={input} onChange={(val) => setInput(val || "")} />
+          <Editor
+            height="100%"
+            width="100%"
+            className="rounded-l-sm"
+            defaultLanguage="markdown"
+            theme="vs-dark"
+            value={input}
+            onChange={(val) => setInput(val || "")}
+            options={{
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+            }}
+          />
         </div>
 
         {/* Right - Preview */}
-        <div className="h-full bg-gray-900 overflow-auto p-4">
+        <div className="h-full bg-gray-900 overflow-auto p-4 w-full rounded-r-sm">
           {output ? (
             <div className="bg-gray-800 rounded-lg shadow-lg p-4" dangerouslySetInnerHTML={{ __html: output }} />
           ) : (
