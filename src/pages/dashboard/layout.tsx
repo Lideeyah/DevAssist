@@ -1,11 +1,14 @@
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/app-sidebar";
-// import { dashboardHeader } from "@/components/dashboard/dashboardHeader";
-import { Bell } from "lucide-react";
+import { Bell, ChevronDown, LayoutGrid, Settings } from "lucide-react";
+import { FaBolt, FaGithub } from "react-icons/fa";
 
 export default function DashboardLayout(): JSX.Element {
+  const location = useLocation();
+  const pathName = location.pathname;
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -15,9 +18,6 @@ export default function DashboardLayout(): JSX.Element {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
           </div>
-          {/* <div className="">
-            <dashboardHeader />
-          </div> */}
 
           <div className="flex justify-end">
             <div className="flex items-center gap-4">
@@ -25,6 +25,29 @@ export default function DashboardLayout(): JSX.Element {
               <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white"></div>
             </div>
           </div>
+
+          {pathName === "/IDE" && (
+            <div className="flex justify-end items-center gap-4">
+              <div className="bg-neutral-700 rounded-lg p-2 hover:scale-95 transition-all duration-200 cursor-pointer">
+                <Settings size={17} />
+              </div>
+              <div className="hover:scale-95 transition-all duration-200 cursor-pointer">
+                <FaGithub size={20} />
+              </div>
+              <div className="border rounded-lg p-2 hover:scale-95 transition-all duration-200 cursor-pointer">
+                <FaBolt className="text-green-600" size={17} />
+              </div>
+              <div className="bg-neutral-800 hover:scale-95 transition-all duration-200 cursor-pointer p-2 rounded-lg flex items-center gap-3">
+                <LayoutGrid size={17} />
+                <span>Integration</span>
+                <ChevronDown size={17} />
+              </div>
+              <div className="flex items-center hover:scale-95 transition-all duration-200 cursor-pointer bg-blue-500 rounded-lg p-2 gap-3">
+                Publish
+                <ChevronDown size={17} />
+              </div>
+            </div>
+          )}
         </header>
 
         <main className="p-6">
