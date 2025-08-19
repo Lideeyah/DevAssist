@@ -51,6 +51,7 @@ export default function OnboardingLayout() {
          try {
             localStorage.setItem(LS_KEY, JSON.stringify(merged));
          } catch (e) {
+            console.log(e);
             // ignore local storage errors
          }
          return merged;

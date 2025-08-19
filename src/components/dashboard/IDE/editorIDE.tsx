@@ -3,12 +3,14 @@ import SplitPane from "react-split-pane";
 import { Editor } from "@monaco-editor/react";
 
 export default function EditorIDE() {
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+   const [input, setInput] = useState("");
+   const [output, setOutput] = useState("");
 
-  const handleRun = () => {
-    setOutput(`<h1 class="text-xl text-green-400">Hello from Preview 🚀</h1>`);
-  };
+   const handleRun = () => {
+      setOutput(
+         `<h1 class="text-xl text-green-400">Hello from Preview 🚀</h1>`
+      );
+   };
 
   return (
     <div className="w-full max-w-2xl rounded-sm border overflow-hidden h-[calc(100vh-198px)] pb-4">
