@@ -1,5 +1,5 @@
 import { useState } from "react";
-import SplitPane from "react-split-pane";
+import SplitPane from "react-split-pane-next";
 import { Editor } from "@monaco-editor/react";
 
 export default function EditorIDE() {
