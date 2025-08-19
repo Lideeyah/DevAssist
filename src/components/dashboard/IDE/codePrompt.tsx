@@ -2,7 +2,7 @@ import { useState } from "react";
 import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2 } from "lucide-react";
 import SplitPane from "react-split-pane";
 import { Button } from "@/components/ui/button";
-import EditorIDE from "./editorIDE";
+import EditorIDE from "./EditorIDE";
 
 export default function CodePrompt() {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -52,7 +52,7 @@ export default function CodePrompt() {
           className="!overflow-visible"
         >
           {/* Left - Code Prompt (shown only in preview mode) */}
-          {!isFullScreen && (
+          {!isFullScreen ? (
             <div className="flex flex-col w-full justify-end max-h-full h-[calc(100vh-78px)] px-4 py-2">
               <div className="overflow-auto">
                 <div className="flex-1 border rounded-xs mb-5 flex w-full">
@@ -83,10 +83,12 @@ export default function CodePrompt() {
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="hidden"></div>
           )}
 
           {/* Right - Preview section */}
-          <div className={`w-full pr-5 max-h-full h-[calc(100vh-1000px)] ${isFullScreen ? "pl-5" : ""}`}>
+          <div className={`w-full pr-5 max-h-full h-[calc(100vh-78px)] ${isFullScreen ? "pl-5" : ""}`}>
             <div className="space-y-3">
               <div className="flex items-center w-fit rounded-full bg-neutral-900 p-1">
                 <button
