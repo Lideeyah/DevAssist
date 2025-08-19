@@ -1,6 +1,6 @@
-import DashboardHistory from "@/components/dashboard/dashboardHistory";
-import DashboardOverview from "@/components/dashboard/dashboardOverview";
-import SubHeading from "@/components/dashboard/SubHeading";
+import DashboardHistory from "@/components/dashboard/Overview/dashboardHistory";
+import DashboardOverview from "@/components/dashboard/Overview/dashboardOverview";
+import SubHeading from "@/components/dashboard/Overview/SubHeading";
 
 export default function Overview() {
   return (

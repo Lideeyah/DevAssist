@@ -13,21 +13,21 @@ export default function DashboardLayout(): JSX.Element {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex justify-between pr-4 overflow-hidden border-b h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex fixed w-full z-[9999] bg-background justify-between pr-4 overflow-hidden border-b h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
           </div>
 
-          <div className="flex justify-end">
-            <div className="flex items-center gap-4">
-              <Bell className="text-xl cursor-pointer" />
-              <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white"></div>
+          {pathName !== "/dashboard/IDE" ? (
+            <div className="flex w-full">
+              <div className="flex items-center justify-end gap-4">
+                <Bell className="text-xl cursor-pointer" />
+                <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white"></div>
+              </div>
             </div>
-          </div>
-
-          {pathName === "/IDE" && (
-            <div className="flex justify-end items-center gap-4">
+          ) : (
+            <div className="flex items-center justify-end w-full gap-4">
               <div className="bg-neutral-700 rounded-lg p-2 hover:scale-95 transition-all duration-200 cursor-pointer">
                 <Settings size={17} />
               </div>
@@ -50,7 +50,7 @@ export default function DashboardLayout(): JSX.Element {
           )}
         </header>
 
-        <main className="p-6">
+        <main className="p-6 mt-16 z-10">
           <Outlet />
         </main>
       </SidebarInset>

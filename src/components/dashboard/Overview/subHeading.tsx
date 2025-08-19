@@ -1,5 +1,5 @@
+import { Button } from "@/components/ui/button";
 import { Plus, Store } from "lucide-react";
-import { Button } from "../ui/button";
 
 export default function SubHeading(): JSX.Element {
   return (
