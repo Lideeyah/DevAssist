@@ -15,6 +15,10 @@ export default function EditorIDE() {
       <SplitPane split="vertical" minSize={200} maxSize={-200} defaultSize="30%" className="!overflow-vidible rounded-sm pb-10 w-full max-w-5xl mx-6">
         {/* Left - Monaco Editor */}
         <div className="flex flex-col rounded-l-sm  h-full bg-black text-white w-full">
+    <div className="h-screen w-screen">
+      <SplitPane split="vertical" minSize={200} defaultSize="40%">
+        {/* Left - Monaco Editor */}
+        <div className="flex flex-col h-full bg-black text-white">
           <div className="p-2 border-b border-gray-700 flex justify-between items-center">
             <h1 className="text-sm font-bold">DevAssist</h1>
             <button onClick={handleRun} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs">
