@@ -6,7 +6,6 @@ import SignUp from "@/pages/sign-up";
 import Layout from "@/components/router/layout";
 import { RedirectIfAuth } from "@/components/router/auth";
 
-import Dashboard from "@/pages/dashboard";
 import OnboardingLayout from "@/pages/onboarding/layout";
 import SelectCountry from "@/pages/onboarding/select-country";
 import SelectPath from "@/pages/onboarding/select-path";
@@ -24,7 +23,6 @@ export default function App() {
       <Routes>
          <Route element={<Layout />}>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
 
             <Route path="/bolt-version" element={<BoltVersion />} />
 
@@ -65,7 +63,7 @@ export default function App() {
             <Route
                path="/auth/sign-in"
                element={
-                  <RedirectIfAuth isAuthenticated={!isAuthenticated}>
+                  <RedirectIfAuth isAuthenticated={isAuthenticated}>
                      <SignIn />
                   </RedirectIfAuth>
                }
