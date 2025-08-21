@@ -5,8 +5,13 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useProjectManager } from "@/hooks/useProjectManager";
 import AuthModal from "./API/AuthModal";
+<<<<<<< HEAD
 import LivePreview from "./LivePreview";
 import EditCode from "./EditCode";
+=======
+import LivePreview from "./livePreview";
+import EditCode from "./editCode";
+>>>>>>> b3db5f9fbbc99d1a2bdff2e4c11e39038fe2f323
 
 interface UserProfile {
   _id: string;
