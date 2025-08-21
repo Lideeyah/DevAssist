@@ -14,12 +14,14 @@ interface CodeEditorProps {
   onFileUpdate: (filename: string, content: string) => void;
 }
 
-export default function editCode({ files, currentFile, onFileSelect, onFileUpdate }: CodeEditorProps) {
+export default function EditCode({ files, currentFile, onFileSelect, onFileUpdate }: CodeEditorProps) {
   const [content, setContent] = useState("");
 
   useEffect(() => {
     const currentFileData = files.find((f) => f.filename === currentFile);
-    setContent(currentFileData?.content || "");
+    if (currentFileData) {
+      setContent(currentFileData.content);
+    }
   }, [currentFile, files]);
 
   const handleContentChange = (newContent: string) => {

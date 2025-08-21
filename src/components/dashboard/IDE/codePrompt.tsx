@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2, User, Code, Monitor, FolderOpen } from "lucide-react";
-import Splitplane from "react-split-pane";
+import SplitPane from "react-split-pane";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useProjectManager } from "@/hooks/useProjectManager";
 import AuthModal from "./API/AuthModal";
-import LivePreview from "./livePreview";
+import LivePreview from "./LivePreview";
 import EditCode from "./EditCode";
 
 interface UserProfile {
@@ -94,7 +94,12 @@ export default function CodePrompt() {
       // Update the history with the successful response
       setPromptHistory((prev) =>
         prev.map((item, index) =>
-          index === prev.length - 1 ? { ...item, response: "✅ Landing page generated successfully! Check the Code and Preview tabs." } : item
+          index === prev.length - 1
+            ? {
+                ...item,
+                response: "✅ Landing page generated successfully! Check the Code and Preview tabs.",
+              }
+            : item
         )
       );
 
@@ -104,18 +109,17 @@ export default function CodePrompt() {
     } catch (error: any) {
       console.error("Project generation failed:", error);
 
-      // Update the history with the error response
-      let errorMessage = "❌ Failed to generate project. Please try again.";
-
-      if (error.message.includes("JSON")) {
-        errorMessage = "❌ The AI response format was unexpected. Please try again with a different prompt.";
-      } else if (error.message.includes("token")) {
-        errorMessage = "❌ Token limit exceeded. Please try again later or upgrade your plan.";
-      } else if (error.message) {
-        errorMessage = `❌ ${error.message}`;
-      }
-
-      setPromptHistory((prev) => prev.map((item, index) => (index === prev.length - 1 ? { ...item, response: errorMessage } : item)));
+      // Update the history with the specific error message
+      setPromptHistory((prev) =>
+        prev.map((item, index) =>
+          index === prev.length - 1
+            ? {
+                ...item,
+                response: `❌ ${error.message || "Failed to generate project. Please try again."}`,
+              }
+            : item
+        )
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -185,7 +189,7 @@ export default function CodePrompt() {
     <>
       <div className="max-h-full h-[calc(100vh-75px)] w-full flex overflow-hidden">
         {activeTab === "preview" ? (
-          <Splitplane
+          <SplitPane
             split="vertical"
             minSize={isFullScreen ? 0 : 200}
             maxSize={isFullScreen ? 0 : 70}
@@ -226,7 +230,7 @@ export default function CodePrompt() {
                           style={{ width: `${usagePercentage}%` }}
                         />
                       </div>
-                      {!canRequest && <div className="text-xs text-red-400 mt-2">⚠️ Daily limit reached</div>}
+                      {!canRequest && <div className="text-xs text-red-400 mt-2">Daily limit reached</div>}
                     </div>
                   </div>
 
@@ -359,7 +363,7 @@ export default function CodePrompt() {
                 </div>
               </div>
             </div>
-          </Splitplane>
+          </SplitPane>
         ) : (
           /* Code Editor when in code mode */
           <div className="w-full h-full">
