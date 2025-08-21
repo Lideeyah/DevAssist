@@ -47,6 +47,9 @@ export function NavUser({
    const onSuccess = () => {
       setHasPaid(true);
       toast.success("Thank you for the subscription!");
+      setTimeout(() => {
+         setHasPaid(false);
+      }, 3000);
    };
 
    const onClose = () => {
