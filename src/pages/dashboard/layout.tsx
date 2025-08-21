@@ -17,14 +17,14 @@ export default function DashboardLayout(): JSX.Element {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex w-full z-[9999] bg-background justify-between pr-4 overflow-hidden border-b h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex w-full bg-background justify-between pr-4 overflow-hidden border-b h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4 w-full">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
           </div>
 
-          {pathName !== "/dashboard/IDE" ? (
-            <div className="flex w-full">
+          {pathName !== "/dashboard/prompt" ? (
+            <div className="flex">
               <div className="flex items-center justify-end gap-4">
                 <Bell className="text-xl cursor-pointer" />
                 <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white"></div>
