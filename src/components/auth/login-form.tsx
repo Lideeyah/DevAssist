@@ -12,11 +12,13 @@ import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export function LoginForm({
    className,
    ...props
 }: React.ComponentProps<"div">) {
+   const { login } = useAuth();
    const {
       register,
       handleSubmit,
@@ -35,31 +37,27 @@ export function LoginForm({
 
    async function onSubmit(data: TSignIn) {
       try {
-         await authClient.signIn.email(
-            {
-               email: data.email,
-               password: data.password,
-               rememberMe: true,
-            },
-            {
-               onSuccess: () => {
-                  navigate("/dashboard");
-                  toast.success("Signed in successfully!");
-               },
-               onError: (ctx) => {
-                  toast.error(ctx.error.message ?? "Something went wrong!");
-                  console.log(ctx.error);
-               },
-            }
-         );
+         await login({
+            email: data.email,
+            password: data.password,
+         });
+
+         toast.success("Signed in successfully!");
+
+         navigate("/dashboard");
       } catch (error) {
+         if (error instanceof Error) {
+            toast.error(error.message);
+         } else {
+            toast.error("Something went wrong!");
+         }
+
          console.log(error);
-         toast.error("Something went wrong!");
       }
    }
 
    async function signInWithGithub() {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
          await authClient.signIn.social(
             {
@@ -68,7 +66,7 @@ export function LoginForm({
             },
             {
                onResponse: () => {
-                  setIsLoading(false)
+                  setIsLoading(false);
                },
                onError: (ctx) => {
                   toast.error(ctx.error.message ?? "Something went wrong!");

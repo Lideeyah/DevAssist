@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import Logo from "./logo";
 import { Button } from "./ui/button";
-import { authClient } from "@/lib/auth-client";
 import UserDropdown from "./user-dropdow";
+import { useAuth } from "@/hooks/use-auth";
 
 const navLinks = [
    {
@@ -24,7 +24,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-   const { data } = authClient.useSession();
+   const { user } = useAuth();
 
    return (
       <nav className="flex items-center justify-between h-20">
@@ -38,7 +38,7 @@ export default function Navbar() {
             ))}
          </ul>
 
-         {!data?.user ? (
+         {!user ? (
             <div className="flex gap-4">
                <Button asChild variant="outline" size={"lg"}>
                   <Link to="/auth/sign-up">Sign Up</Link>
@@ -48,7 +48,7 @@ export default function Navbar() {
                </Button>
             </div>
          ) : (
-            <UserDropdown user={data.user} align="end" />
+            <UserDropdown user={user} align="end" />
          )}
       </nav>
    );

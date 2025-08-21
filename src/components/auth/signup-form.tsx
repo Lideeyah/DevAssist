@@ -12,11 +12,13 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { SiGithub } from "react-icons/si";
+import { useAuth } from "@/hooks/use-auth";
 
 export function SignUpForm({
    className,
    ...props
 }: React.ComponentProps<"div">) {
+   const { signup } = useAuth();
    const {
       register,
       handleSubmit,
@@ -35,26 +37,23 @@ export function SignUpForm({
 
    async function onSubmit(data: TSignUp) {
       try {
-         await authClient.signUp.email(
-            {
-               email: data.email,
-               password: data.password,
-               name: data.name,
-            },
-            {
-               onSuccess: () => {
-                  navigate("/dashboard");
-                  toast.success("Signed up successfully!");
-               },
-               onError: (ctx) => {
-                  toast.error(ctx.error.message ?? "Something went wrong!");
-                  console.log(ctx.error);
-               },
-            }
-         );
+         await signup({
+            email: data.email,
+            password: data.password,
+            fullName: data.name,
+         });
+
+         toast.success("Account created successfully!");
+
+         navigate("/dashboard");
       } catch (error) {
+         if (error instanceof Error) {
+            toast.error(error.message);
+         } else {
+            toast.error("Something went wrong!");
+         }
+
          console.log(error);
-         toast.error("Something went wrong!");
       }
    }
 

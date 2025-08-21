@@ -6,11 +6,11 @@ import {
    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "better-auth";
 import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Link } from "react-router";
+import { User } from "@/types/auth";
 
 interface UserDropdownProps {
    user: User;
@@ -41,12 +41,11 @@ export default function UserDropdown({
             <Avatar className="size-10">
                <AvatarImage
                   src={
-                     user.image ??
-                     `https://api.dicebear.com/9.x/dylan/svg?seed=${user.name}`
+                     `https://api.dicebear.com/9.x/dylan/svg?seed=${user.username}`
                   }
                />
                <AvatarFallback className="font-medium">
-                  {user.name.charAt(0)}
+                  {user.username.charAt(0)}
                </AvatarFallback>
             </Avatar>
          </DropdownMenuTrigger>
@@ -58,16 +57,15 @@ export default function UserDropdown({
                <Avatar className="size-12">
                   <AvatarImage
                      src={
-                        user.image ??
-                        `https://api.dicebear.com/9.x/dylan/svg?seed=${user.name}`
+                        `https://api.dicebear.com/9.x/dylan/svg?seed=${user.username}`
                      }
                   />
                   <AvatarFallback className="font-medium">
-                     {user.name.charAt(0)}
+                     {user.username.charAt(0)}
                   </AvatarFallback>
                </Avatar>
                <div className="grid">
-                  <p className="font-medium">{user.name}</p>
+                  <p className="font-medium">{user.username}</p>
                   <span className="text-sm text-muted-foreground">
                      {user.email}
                   </span>

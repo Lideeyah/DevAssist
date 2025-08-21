@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { useProjectManager } from "@/hooks/useProjectManager";
 import AuthModal from "./API/AuthModal";
 import LivePreview from "./livePreview";
-import EditCode from "./EditCode";
+import EditCode from "./editCode";
 
 interface UserProfile {
   _id: string;

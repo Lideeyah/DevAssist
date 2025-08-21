@@ -8,13 +8,9 @@ import {
    SidebarRail,
 } from "@/components/ui/sidebar";
 import { DashboardLogo } from "./dashboard-logo";
+import { useAuth } from "@/hooks/use-auth";
 
 const data = {
-   user: {
-      name: "Redoxx",
-      email: "hello@redoxx.dev",
-      avatar: "https://api.dicebear.com/9.x/dylan/svg?seed=Redoxx",
-   },
    navMain: [
       {
          title: "Dashboard",
@@ -63,6 +59,10 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+   const { user } = useAuth();
+
+   if (!user) return null;
+
    return (
       <Sidebar collapsible="icon" {...props}>
          <SidebarHeader>
@@ -73,7 +73,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {/* <NavProjects projects={data.projects} /> */}
          </SidebarContent>
          <SidebarFooter>
-            <NavUser user={data.user} />
+            <NavUser
+               user={{
+                  avatar: `https://api.dicebear.com/9.x/dylan/svg?seed=T${user.username}`,
+                  email: user.email,
+                  name: user.username,
+               }}
+            />
          </SidebarFooter>
          <SidebarRail />
       </Sidebar>

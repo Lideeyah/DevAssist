@@ -41,7 +41,7 @@ export function NavUser({
                      <Avatar className="h-8 w-8 rounded-sm">
                         <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback className="rounded-md">
-                           R
+                           {user.name.charAt(0)}
                         </AvatarFallback>
                      </Avatar>
                      <div className="grid flex-1 text-left text-sm leading-tight">
@@ -64,7 +64,7 @@ export function NavUser({
                         <Avatar className="h-8 w-8 rounded-sm">
                            <AvatarImage src={user.avatar} alt={user.name} />
                            <AvatarFallback className="rounded-md">
-                              CN
+                              {user.name.charAt(0)}
                            </AvatarFallback>
                         </Avatar>
                         <div className="grid flex-1 text-left text-sm leading-tight">
