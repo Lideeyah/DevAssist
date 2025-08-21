@@ -1,13 +1,17 @@
 import { Outlet, useLocation } from "react-router";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+   SidebarInset,
+   SidebarProvider,
+   SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Bell, ChevronDown, LayoutGrid, Settings } from "lucide-react";
 import { FaBolt, FaGithub } from "react-icons/fa";
 
 export default function DashboardLayout(): JSX.Element {
-  const location = useLocation();
-  const pathName = location.pathname;
+   const location = useLocation();
+   const pathName = location.pathname;
 
   return (
     <SidebarProvider>
