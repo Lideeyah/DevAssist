@@ -14,7 +14,8 @@ import DashboardLayout from "./pages/dashboard/layout";
 import { Suspense } from "react";
 import Overview from "@/pages/dashboard/overview";
 import Settings from "@/pages/dashboard/settings";
-import IDE from "./pages/dashboard/IDE";
+import MonacoIDE from "./components/Monaco IDE/monacoIDE";
+import PromptSetup from "./pages/dashboard/PromptSetup";
 
 export default function App() {
   const data = "authClient.useSession()";
@@ -33,6 +34,14 @@ export default function App() {
           <Route path="path" element={<SelectPath />} />
         </Route>
 
+        <Route
+          path="ide"
+          element={
+            <Suspense fallback={<div>Loading IDE...</div>}>
+              <MonacoIDE />
+            </Suspense>
+          }
+        />
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Navigate to="overview" replace />} />
           <Route
@@ -44,10 +53,10 @@ export default function App() {
             }
           />
           <Route
-            path="IDE"
+            path="prompt"
             element={
-              <Suspense fallback={<div>Loading IDE...</div>}>
-                <IDE />
+              <Suspense fallback={<div>Loading Prompt...</div>}>
+                <PromptSetup />
               </Suspense>
             }
           />

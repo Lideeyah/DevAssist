@@ -1,8 +1,6 @@
 import CodePrompt from "@/components/dashboard/IDE/CodePrompt";
 
-// import CodePrompt from "@/components/dashboard/IDE/codePrompt";
-
-export default function IDE() {
+export default function PromptSetup() {
   return (
     <div className="">
       <div className="">
