@@ -4,7 +4,7 @@ import LandingPage from "@/pages/landing-page";
 import SignIn from "@/pages/sign-in";
 import SignUp from "@/pages/sign-up";
 import Layout from "@/components/router/layout";
-import { RedirectIfAuth } from "@/components/router/auth";
+import { ProtectedRoute, RedirectIfAuth } from "@/components/router/auth";
 
 import OnboardingLayout from "@/pages/onboarding/layout";
 import SelectCountry from "@/pages/onboarding/select-country";
@@ -37,11 +37,20 @@ export default function App() {
                path="ide"
                element={
                   <Suspense fallback={<div>Loading IDE...</div>}>
-                     <MonacoIDE />
+                     <ProtectedRoute isAuthenticated={isAuthenticated}>
+                        <MonacoIDE />
+                     </ProtectedRoute>
                   </Suspense>
                }
             />
-            <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route
+               path="/dashboard"
+               element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                     <DashboardLayout />
+                  </ProtectedRoute>
+               }
+            >
                <Route index element={<Navigate to="overview" replace />} />
                <Route
                   path="overview"

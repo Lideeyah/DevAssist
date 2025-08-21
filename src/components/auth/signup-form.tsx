@@ -45,7 +45,7 @@ export function SignUpForm({
 
          toast.success("Account created successfully!");
 
-         navigate("/dashboard");
+         navigate("/onboarding");
       } catch (error) {
          if (error instanceof Error) {
             toast.error(error.message);
