@@ -30,8 +30,7 @@ export default function SelectPath() {
    };
 
    function choose(itemTitle: string) {
-      const key = titleToKey(itemTitle);
-      setPath(key);
+      setPath(itemTitle);
    }
 
    function onNext() {
@@ -68,8 +67,7 @@ export default function SelectPath() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
                {whoweserve.map((item) => {
-                  const key = titleToKey(item.title);
-                  const isSelected = path === key;
+                  const isSelected = path === item.title;
                   return (
                      <div
                         key={item.title}

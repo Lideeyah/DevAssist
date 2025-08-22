@@ -14,9 +14,14 @@ const data = {
    navMain: [
       {
          title: "Dashboard",
-         url: "/overview",
+         url: "/dashboard/overview",
          isActive: true,
          icon: "solar:code-scan-bold-duotone",
+      },
+      {
+         title: "Prompt",
+         url: "/dashboard/prompt",
+         icon: "solar:chat-square-code-bold-duotone",
       },
       {
          title: "IDE",
@@ -25,17 +30,17 @@ const data = {
       },
       {
          title: "Documentation",
-         url: "/documentation",
+         url: "/dashboard/documentation",
          icon: "solar:documents-bold-duotone",
       },
       {
          title: "Deployment",
-         url: "/deployment",
+         url: "/dashboard/deployment",
          icon: "solar:rocket-2-bold-duotone",
       },
       {
          title: "Settings",
-         url: "#",
+         url: "/dashboard/settings",
          icon: "solar:settings-bold-duotone",
       },
    ],
