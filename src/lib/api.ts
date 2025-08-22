@@ -473,7 +473,7 @@ class DevAssistAPI {
       json: "application/json",
       md: "text/markdown",
     };
-    return mimeTypes[extension] || "text/plain";
+    return mimeTypes[extension as keyof typeof mimeTypes] || "text/plain";
   }
 
   private setTokens(tokens: Tokens) {

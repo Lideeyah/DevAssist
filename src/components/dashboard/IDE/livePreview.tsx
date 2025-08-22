@@ -49,7 +49,7 @@ export default function LivePreview({ files, mainFile, deviceSize }: LivePreview
 
         setError("");
         return htmlContent;
-      } catch (err) {
+      } catch {
         setError("Failed to generate preview");
         return "<div>Error generating preview</div>";
       }

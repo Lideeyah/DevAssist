@@ -4,7 +4,7 @@ import LandingPage from "@/pages/landing-page";
 import SignIn from "@/pages/sign-in";
 import SignUp from "@/pages/sign-up";
 import Layout from "@/components/router/layout";
-import { ProtectedRoute, RedirectIfAuth } from "@/components/router/auth";
+import { RedirectIfAuth, ProtectedRoute} from "@/components/router/auth";
 
 import OnboardingLayout from "@/pages/onboarding/layout";
 import SelectCountry from "@/pages/onboarding/select-country";
