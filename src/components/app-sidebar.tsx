@@ -19,7 +19,7 @@ const data = {
          icon: "solar:code-scan-bold-duotone",
       },
       {
-         title: "Prompt",
+         title: "SME Builder",
          url: "/dashboard/prompt",
          icon: "solar:chat-square-code-bold-duotone",
       },

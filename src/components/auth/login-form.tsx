@@ -91,7 +91,7 @@ export function LoginForm({
                   >
                      <Logo />
                   </Link>
-                  <h1 className="text-xl font-bold">Welcome to Acme Inc.</h1>
+                  <h1 className="text-xl font-bold">Welcome background!</h1>
                   <div className="text-center text-sm">
                      Don&apos;t have an account?{" "}
                      <Link
