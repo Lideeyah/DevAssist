@@ -1,6 +1,6 @@
 # DevAssist
 
-DevAssist is an AI-powered fullstack IDE, collaboration hub, and SME app builder. It helps developers, teams, and businesses build, manage, and scale applications with AI assistance, seamless collaboration, and integrated payments.
+DevAssist is an AI-powered fullstack IDE, collaboration hub, and SME app builder. It helps developers, teams, and businesses build, manage, and scale applications with AI assistance, seamless collaboration, and integrated  payments.
 
 ---
 
