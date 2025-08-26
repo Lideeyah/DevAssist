@@ -1,12 +1,6 @@
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import {
-   Sidebar,
-   SidebarContent,
-   SidebarFooter,
-   SidebarHeader,
-   SidebarRail,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
 import { DashboardLogo } from "./dashboard-logo";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -64,29 +58,29 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-   const { user } = useAuth();
+  const { user } = useAuth();
 
-   if (!user) return null;
+  if (!user) return null;
 
-   return (
-      <Sidebar collapsible="icon" {...props}>
-         <SidebarHeader>
-            <DashboardLogo />
-         </SidebarHeader>
-         <SidebarContent>
-            <NavMain items={data.navMain} />
-            {/* <NavProjects projects={data.projects} /> */}
-         </SidebarContent>
-         <SidebarFooter>
-            <NavUser
-               user={{
-                  avatar: `https://api.dicebear.com/9.x/dylan/svg?seed=T${user.username}`,
-                  email: user.email,
-                  name: user.username,
-               }}
-            />
-         </SidebarFooter>
-         <SidebarRail />
-      </Sidebar>
-   );
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <DashboardLogo />
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        {/* <NavProjects projects={data.projects} /> */}
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser
+          user={{
+            avatar: `https://api.dicebear.com/9.x/dylan/svg?seed=T${user.username}`,
+            email: user.email,
+            name: user.username,
+          }}
+        />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  );
 }

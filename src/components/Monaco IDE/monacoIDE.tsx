@@ -7,7 +7,8 @@ import EditorTabs from "./EditorTabs";
 import FileExplorer from "./FileExplorer";
 import MenuBar from "./MenuBar";
 import { api } from "@/lib/DevAssistAPI ";
-import { AIService } from "@/lib/AIService ";
+import { aiService } from "@/lib/AIService ";
+import Terminal from "./terminal";
 
 export default function MonacoIDE() {
   const [files, setFiles] = useState<any[]>([]);
@@ -16,6 +17,7 @@ export default function MonacoIDE() {
   const [openFiles, setOpenFiles] = useState<any[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+  const [isTerminalVisible, setIsTerminalVisible] = useState(false);
   const [conversation, setConversation] = useState([
     {
       role: "assistant",
@@ -141,28 +143,188 @@ def calculate_average(numbers):
     setActiveFile(defaultFiles[0]);
   };
 
+  // Replace all aiService calls with api.generateAIResponse()
+
   const analyzeCode = async () => {
     if (!activeFile || !isAuthenticated) return;
 
     setIsAiAnalyzing(true);
     try {
-      const response = await AIService.analyzeCode(activeFile.content, getCodeContext());
-      setAiSuggestions(response.suggestions);
+      const response = await api.generateAIResponse(
+        `Analyze this code and provide suggestions:\n\n${activeFile.content}\n\nProject Context: ${getCodeContext()}`,
+        "explain"
+      );
 
-      // Add AI analysis to conversation
-      if (response.explanation) {
+      setAiSuggestions([
+        {
+          text: response.response || "Code analysis completed",
+          severity: "info",
+        },
+      ]);
+
+      if (response.response) {
         setConversation((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: response.explanation,
+            content: response.response,
           },
         ]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error analyzing code:", error);
+      // Handle error...
     } finally {
       setIsAiAnalyzing(false);
+    }
+  };
+
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim() || !isAuthenticated) return;
+
+    const newConversation = [...conversation, { role: "user", content: message }];
+    setConversation(newConversation);
+    setIsAiResponding(true);
+
+    try {
+      const response = await api.generateAIResponse(
+        message,
+        "explain",
+        undefined // projectId is optional
+      );
+
+      setConversation((prev: any) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response.response,
+        },
+      ]);
+    } catch (error) {
+      // Handle error...
+    } finally {
+      setIsAiResponding(false);
+    }
+  };
+
+  // Similarly update handleExplainCode and handleGenerateCode
+  const handleExplainCode = async () => {
+    if (!activeFile || !isAuthenticated) return;
+
+    setIsAiResponding(true);
+    try {
+      const response = await api.generateAIResponse(`Explain this ${activeFile.language} code:\n\n${activeFile.content}`, "explain");
+
+      setConversation((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Here's an explanation of the code in ${activeFile.name}:\n\n${response.response}`,
+        },
+      ]);
+    } catch (error: any) {
+      // Handle error...
+    } finally {
+      setIsAiResponding(false);
+    }
+  };
+
+  // const handleGenerateCode = async (prompt: string) => {
+  //   if (!isAuthenticated) return;
+
+  //   setIsAiResponding(true);
+  //   try {
+  //     setConversation((prev) => [
+  //       ...prev,
+  //       {
+  //         role: "user",
+  //         content: `Generate code: ${prompt}`,
+  //       },
+  //     ]);
+
+  //     const response = await api.generateAIResponse(prompt, "generate");
+
+  //     setConversation((prev) => [
+  //       ...prev,
+  //       {
+  //         role: "assistant",
+  //         content: `Here's the code I generated based on your request:\n\n\`\`\`${"text"}\n${response.response}\n\`\`\``,
+  //       },
+  //     ]);
+  //   } catch (error: any) {
+  //     // Handle error...
+  //   } finally {
+  //     setIsAiResponding(false);
+  //   }
+  // };
+  const handleGenerateCode = async (prompt: string) => {
+    if (!isAuthenticated) return;
+
+    setIsAiResponding(true);
+    try {
+      setConversation((prev) => [
+        ...prev,
+        {
+          role: "user",
+          content: `Generate code: ${prompt}`,
+        },
+      ]);
+
+      const response = await api.generateAIResponse(prompt, "generate");
+      const generatedCode = response.response || "";
+
+      if (generatedCode) {
+        // Offer different options to the user
+        const userChoice = window.confirm("Generated code ready! Click OK to replace current content, or Cancel to view it first.");
+
+        if (userChoice) {
+          // Replace content
+          replaceFileContent(generatedCode);
+          setConversation((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `I've replaced the file content with the generated code.`,
+            },
+          ]);
+        } else {
+          // Show code without replacing
+          setConversation((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `Here's the code I generated. Use the "Replace All" button if you want to use it:\n\n\`\`\`\n${generatedCode}\n\`\`\``,
+            },
+          ]);
+
+          // Add to suggestions for later use
+          setAiSuggestions([
+            {
+              text: "Generated code available",
+              replacement: generatedCode,
+              severity: "info",
+            },
+          ]);
+        }
+      }
+    } catch (error: any) {
+      // Error handling...
+    } finally {
+      setIsAiResponding(false);
+    }
+  };
+
+  // Add this function to your MonacoIDE component
+  const replaceFileContent = (content: string) => {
+    if (activeFile && editorRef.current) {
+      // Update the file content in state
+      updateFile(activeFile.id, content);
+
+      // If you want to programmatically set the editor content
+      const editor = editorRef.current;
+      if (editor && typeof editor.setValue === "function") {
+        editor.setValue(content);
+      }
     }
   };
 
@@ -327,41 +489,6 @@ print("Hello World")`;
     }
   };
 
-  const handleSendMessage = async (message: string) => {
-    if (!message.trim() || !isAuthenticated) return;
-
-    // Add user message to conversation
-    const newConversation = [...conversation, { role: "user", content: message }];
-    setConversation(newConversation);
-    setIsAiResponding(true);
-
-    // Get AI response
-    try {
-      const response = await AIService.chat(
-        message,
-        `Current file: ${activeFile?.name || "None"}\n\nCode:\n${activeFile?.content || "No code"}\n\nProject context:\n${getCodeContext()}`
-      );
-
-      setConversation((prev: any) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: response,
-        },
-      ]);
-    } catch (error) {
-      setConversation((prev: any) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, I encountered an error processing your request. Please try again.",
-        },
-      ]);
-    } finally {
-      setIsAiResponding(false);
-    }
-  };
-
   const handleLogin = (userData: any) => {
     setUser(userData);
     setIsAuthenticated(true);
@@ -510,10 +637,14 @@ print("Hello World")`;
         />
 
         {/* Editor Area */}
-        <div className="flex-1 flex flex-col border-r border-white">
+        <div className="flex-1 flex flex-col border-r border-white relative">
           <EditorTabs openFiles={openFiles} activeFile={activeFile} onFileClick={openFile} onCloseFile={closeFile} />
 
           <CodeEditor activeFile={activeFile} onContentChange={updateFile} onEditorMount={handleEditorDidMount} />
+
+          <div className="w-full absolute bottom-0 right-0 left-0 z-[9999]">
+            <Terminal isVisible={isTerminalVisible} onClose={() => setIsTerminalVisible(false)} user={user} currentDirectory="~/project" />
+          </div>
         </div>
 
         <AIAssistant
@@ -522,12 +653,21 @@ print("Hello World")`;
           aiSuggestions={aiSuggestions}
           conversation={conversation}
           isAiResponding={isAiResponding}
+          activeFile={activeFile}
           onSendMessage={handleSendMessage}
           onApplySuggestion={applySuggestion}
+          onExplainCode={handleExplainCode}
+          onGenerateCode={handleGenerateCode}
+          onReplaceContent={replaceFileContent}
         />
       </div>
 
-      <StatusBar activeFile={activeFile} isAuthenticated={isAuthenticated} />
+      <StatusBar
+        activeFile={activeFile}
+        isAuthenticated={isAuthenticated}
+        isTerminalVisible={isTerminalVisible}
+        onToggleTerminal={() => setIsTerminalVisible(!isTerminalVisible)}
+      />
     </div>
   );
 }

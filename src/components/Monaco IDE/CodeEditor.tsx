@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { File } from "lucide-react";
+import Terminal from "./terminal";
 
 interface CodeEditorProps {
   activeFile: any;
@@ -8,7 +9,7 @@ interface CodeEditorProps {
   onEditorMount: (editor: any, monaco: any) => void;
 }
 
-export default function CodeEditor({ activeFile, onContentChange, onEditorMount }: CodeEditorProps) {
+export default function CodeEditor({ activeFile, isTerminalVisible, onContentChange, onEditorMount }: CodeEditorProps) {
   const editorRef = useRef(null);
 
   if (!activeFile) {
@@ -24,23 +25,26 @@ export default function CodeEditor({ activeFile, onContentChange, onEditorMount 
   }
 
   return (
-    <MonacoEditor
-      key={activeFile.id}
-      height="100%"
-      language={activeFile.language}
-      theme="hc-black"
-      value={activeFile.content}
-      onChange={(val) => onContentChange(activeFile.id, val || "")}
-      onMount={onEditorMount}
-      options={{
-        fontSize: 14,
-        minimap: { enabled: true },
-        wordWrap: "on",
-        automaticLayout: true,
-        scrollBeyondLastLine: false,
-        suggestOnTriggerCharacters: true,
-        quickSuggestions: true,
-      }}
-    />
+    <>
+      <MonacoEditor
+        key={activeFile.id}
+        height="100%"
+        language={activeFile.language}
+        theme="hc-black"
+        value={activeFile.content}
+        onChange={(val) => onContentChange(activeFile.id, val || "")}
+        onMount={onEditorMount}
+        options={{
+          fontSize: 14,
+          minimap: { enabled: true },
+          wordWrap: "on",
+          automaticLayout: true,
+          scrollBeyondLastLine: false,
+          suggestOnTriggerCharacters: true,
+          quickSuggestions: true,
+        }}
+      />
+      <Terminal isVisible={isTerminalVisible} />
+    </>
   );
 }
