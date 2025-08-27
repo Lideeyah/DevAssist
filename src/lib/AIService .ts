@@ -1,152 +1,284 @@
-import { api } from "./api";
+export interface CodeSuggestion {
+  text: string;
+  replacement?: string;
+  severity?: "info" | "warning" | "error";
+}
 
-export const AIService = {
-  async analyzeCode(code: string, context: string = "") {
+export interface CodeAnalysis {
+  suggestions: CodeSuggestion[];
+  explanation?: string;
+}
+
+export interface CodeGenerationResponse {
+  code: string;
+  language: string;
+  explanation?: string;
+}
+
+class AIService {
+  private baseURL: string;
+
+  constructor() {
+    this.baseURL = import.meta.env.VITE_API_URL || "https://devassit-api.onrender.com/api";
+  }
+
+  private getAuthToken(): string | null {
+    // Use the same token storage as your DevAssistAPI
+    return localStorage.getItem("accessToken");
+  }
+
+  private async request(endpoint: string, data: any) {
     try {
-      // Check if user is authenticated first
-      if (!api.isAuthenticated()) {
-        throw new Error("Please log in to use AI features");
+      const authToken = this.getAuthToken();
+
+      if (!authToken) {
+        throw new Error("Authentication required. Please log in again.");
       }
 
-      const response = await api.generateAIResponse(
-        `Analyze this code and provide suggestions:\n\n${code}\n\nProject Context: ${context}`,
-        "explain"
-      );
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(data),
+      });
 
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Authentication required. Please log in again.");
+        }
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error("AI Service error:", error);
+      throw error;
+    }
+  }
+
+  async analyzeCode(code: string, context: string = ""): Promise<CodeAnalysis> {
+    try {
+      // Use the generateAIResponse method from your API
+      const response = await this.request("/ai/generate", {
+        prompt: `Analyze this code and provide suggestions:\n\n${code}\n\nProject Context: ${context}`,
+        mode: "explain",
+      });
+
+      // Transform the API response to match our expected format
       return {
         suggestions: [
           {
-            text: response.response,
-            replacement: "",
-            type: "analysis",
+            text: response.response || "Code analysis completed",
+            severity: "info",
           },
         ],
-        explanation: response.response,
+        explanation: response.response || "I've analyzed your code. It looks good! Let me know if you need specific improvements.",
       };
     } catch (error) {
-      console.error("API Error:", error);
+      console.error("Error analyzing code:", error);
 
-      // Return a more specific error message for authentication issues
-      if (error instanceof Error && (error.message.includes("authentication") || error.message.includes("log in"))) {
-        return {
-          suggestions: [],
-          explanation: "Authentication required. Please log in to use AI features.",
-        };
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication required")) {
+        throw error;
       }
 
-      return this.getSimulatedResponse(code, context);
-    }
-  },
-
-  async generateCompletion(prompt: string, codeContext: string) {
-    try {
-      // Check if user is authenticated first
-      if (!api.isAuthenticated()) {
-        throw new Error("Please log in to use AI features");
-      }
-
-      const response = await api.generateAIResponse(`${prompt}\n\nCode Context: ${codeContext}`, "generate");
-
-      return {
-        completion: response.response,
-        type: "completion",
-      };
-    } catch (error) {
-      console.error("API Error:", error);
-
-      // Return a more specific error message for authentication issues
-      if (error instanceof Error && (error.message.includes("authentication") || error.message.includes("log in"))) {
-        return {
-          completion: "\n\nPlease log in to use AI features.",
-          type: "error",
-        };
-      }
-
-      return this.getSimulatedCompletion(prompt, codeContext);
-    }
-  },
-
-  async chat(prompt: string, codeContext: string) {
-    try {
-      // Check if user is authenticated first
-      if (!api.isAuthenticated()) {
-        throw new Error("Please log in to use AI features");
-      }
-
-      const response = await api.generateAIResponse(`${prompt}\n\nCode Context: ${codeContext}`, "explain");
-
-      return response.response;
-    } catch (error) {
-      console.error("API Error:", error);
-
-      // Return more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes("authentication") || error.message.includes("log in")) {
-          return "Please log in to use AI features. Click the login button in the file menu.";
-        }
-        if (error.message.includes("connection") || error.message.includes("network")) {
-          return "I'm experiencing connection issues. Please check your internet connection and try again.";
-        }
-      }
-
-      return "I'm experiencing technical difficulties. Please try again later.";
-    }
-  },
-
-  getSimulatedResponse(code: string, context: string) {
-    if (code.includes("fibonacci")) {
+      // Fallback to a simple analysis if the API is not available
       return {
         suggestions: [
           {
-            text: "Use memoization to optimize Fibonacci calculation",
-            replacement: `# Optimized Fibonacci with memoization
-def fibonacci(n, memo={}):
-    if n in memo:
-        return memo[n]
-    if n <= 1:
-        return n
-    memo[n] = fibonacci(n-1, memo) + fibonacci(n-2, memo)
-    return memo[n]`,
-            type: "optimization",
+            text: "This is a demo suggestion. In a real implementation, this would provide specific code improvements.",
+            severity: "info",
           },
         ],
-        explanation: "The current Fibonacci implementation has exponential time complexity. Using memoization reduces it to O(n).",
+        explanation: "This is a demo explanation. In a real implementation, this would provide detailed analysis of your code.",
       };
     }
+  }
 
-    return {
-      suggestions: [],
-      explanation: "I've analyzed your code. It looks good! Let me know if you need specific improvements.",
-    };
-  },
+  async chat(message: string, context: string = ""): Promise<string> {
+    try {
+      const response = await this.request("/ai/generate", {
+        prompt: message,
+        mode: "explain",
+        context,
+      });
 
-  getSimulatedCompletion(prompt: string, codeContext: string) {
-    if (prompt.toLowerCase().includes("test") || prompt.toLowerCase().includes("unit test")) {
+      return response.response || "I'm here to help with your code questions!";
+    } catch (error) {
+      console.error("Error in AI chat:", error);
+
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication required")) {
+        throw error;
+      }
+
+      // Fallback response
+      return "I'm having trouble connecting to the AI service. This is a demo response. In a real implementation, I would provide helpful answers to your questions about the code.";
+    }
+  }
+
+  async explainCode(code: string, language: string = ""): Promise<string> {
+    try {
+      const response = await this.request("/ai/generate", {
+        prompt: `Explain this ${language} code:\n\n${code}`,
+        mode: "explain",
+      });
+
+      return response.response || `This ${language} code appears to be well-structured.`;
+    } catch (error) {
+      console.error("Error explaining code:", error);
+
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication required")) {
+        throw error;
+      }
+
+      // Fallback explanation
+      return `This is a demo explanation for ${language} code. In a real implementation, I would provide a detailed explanation of what this code does, how it works, and any important considerations.`;
+    }
+  }
+
+  async generateCode(prompt: string, context: string = ""): Promise<CodeGenerationResponse> {
+    try {
+      const response = await this.request("/ai/generate", {
+        prompt: prompt,
+        mode: "generate",
+        context,
+      });
+
       return {
-        completion: `\n\n# Unit tests for the current code
-import unittest
+        code: response.response || "# Generated code will appear here",
+        language: "auto",
+        explanation: "Generated code based on your prompt",
+      };
+    } catch (error) {
+      console.error("Error generating code:", error);
 
-class TestFunctions(unittest.TestCase):
-    def test_fibonacci(self):
-        self.assertEqual(fibonacci(0), 0)
-        self.assertEqual(fibonacci(1), 1)
-        self.assertEqual(fibonacci(5), 5)
-        self.assertEqual(fibonacci(10), 55)
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication required")) {
+        throw error;
+      }
 
-    def test_calculate_average(self):
-        self.assertEqual(calculate_average([1, 2, 3]), 2)
-        self.assertEqual(calculate_average([10]), 10)
-        self.assertEqual(calculate_average([]), 0)
-
-if __name__ == '__main__':
-    unittest.main()`,
-        type: "test-generation",
+      // Fallback generated code
+      return {
+        code: `# This is demo generated code based on your prompt: "${prompt}"\n# In a real implementation, this would be actual code tailored to your request\n\ndef example_function():\n    print("Hello, this is generated code!")\n    return True`,
+        language: "python",
+        explanation: "This is demo generated code. In a real implementation, this would be actual code tailored to your request.",
       };
     }
+  }
 
-    return {
-      completion: `\n\n# AI suggestion based on your request: ${prompt}`,
-      type: "general",
-    };
-  },
-};
+  async refactorCode(code: string, instructions: string, context: string = ""): Promise<{ code: string; explanation: string }> {
+    try {
+      const response = await this.request("/ai/generate", {
+        prompt: `Refactor this code with these instructions: ${instructions}\n\nCode:\n${code}`,
+        mode: "generate",
+        context,
+      });
+
+      return {
+        code: response.response || code,
+        explanation: "Refactored code based on your instructions",
+      };
+    } catch (error) {
+      console.error("Error refactoring code:", error);
+
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication required")) {
+        throw error;
+      }
+
+      // Fallback refactored code
+      return {
+        code: `# This is demo refactored code based on your instructions: "${instructions}"\n# In a real implementation, this would be actual refactored code\n\n${code}`,
+        explanation: "This is demo refactored code. In a real implementation, this would be actual code improvements based on your instructions.",
+      };
+    }
+  }
+
+  async debugCode(code: string, errorMessage: string = "", context: string = ""): Promise<{ solution: string; fixedCode: string }> {
+    try {
+      const prompt = errorMessage ? `Debug this code. Error: ${errorMessage}\n\nCode:\n${code}` : `Debug this code and find any issues:\n\n${code}`;
+
+      const response = await this.request("/ai/generate", {
+        prompt: prompt,
+        mode: "explain",
+        context,
+      });
+
+      return {
+        solution: response.response || "Debugging analysis completed",
+        fixedCode: code, // You might want a separate endpoint for fixed code
+      };
+    } catch (error) {
+      console.error("Error debugging code:", error);
+
+      // Check if it's an authentication error
+      if (error.message.includes("Authentication required")) {
+        throw error;
+      }
+
+      // Fallback debug response
+      return {
+        solution: "This is a demo debugging solution. In a real implementation, I would analyze your code and provide specific fixes for any issues.",
+        fixedCode: code, // Return original code as fallback
+      };
+    }
+  }
+
+  // New method to check if user can make AI requests
+  async canMakeAIRequest(): Promise<boolean> {
+    try {
+      const authToken = this.getAuthToken();
+
+      const response = await fetch(`${this.baseURL}/ai/can-request`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const result = await response.json();
+      return result.data.canRequest || false;
+    } catch (error) {
+      console.error("Error checking AI request capability:", error);
+      return false;
+    }
+  }
+
+  // New method to get token usage
+  async getTokenUsage(): Promise<any> {
+    try {
+      const authToken = this.getAuthToken();
+
+      const response = await fetch(`${this.baseURL}/ai/token-usage`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error("Error getting token usage:", error);
+      return null;
+    }
+  }
+}
+
+// Create and export a singleton instance
+export const aiService = new AIService();

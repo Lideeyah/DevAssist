@@ -18,74 +18,74 @@ import PromptSetup from "./pages/dashboard/PromptSetup";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function App() {
-   const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-   return (
-      <Routes>
-         <Route element={<Layout />}>
-            <Route path="/" element={<LandingPage />} />
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<LandingPage />} />
 
-            <Route path="/bolt-version" element={<BoltVersion />} />
+        <Route path="/bolt-version" element={<BoltVersion />} />
 
-            <Route path="/onboarding" element={<OnboardingLayout />}>
-               <Route index element={<Navigate to="country" replace />} />
-               <Route path="country" element={<SelectCountry />} />
-               <Route path="path" element={<SelectPath />} />
-            </Route>
+        <Route path="/onboarding" element={<OnboardingLayout />}>
+          <Route index element={<Navigate to="country" replace />} />
+          <Route path="country" element={<SelectCountry />} />
+          <Route path="path" element={<SelectPath />} />
+        </Route>
 
-            <Route
-               path="ide"
-               element={
-                  <Suspense fallback={<div>Loading IDE...</div>}>
-                     <MonacoIDE />
-                  </Suspense>
-               }
-            />
-            <Route path="/dashboard" element={<DashboardLayout />}>
-               <Route index element={<Navigate to="overview" replace />} />
-               <Route
-                  path="overview"
-                  element={
-                     <Suspense fallback={<div>Loading overview…</div>}>
-                        <Overview />
-                     </Suspense>
-                  }
-               />
-               <Route
-                  path="prompt"
-                  element={
-                     <Suspense fallback={<div>Loading Prompt...</div>}>
-                        <PromptSetup />
-                     </Suspense>
-                  }
-               />
-               <Route
-                  path="settings"
-                  element={
-                     <Suspense fallback={<div>Loading settings…</div>}>
-                        <Settings />
-                     </Suspense>
-                  }
-               />
-            </Route>
+        <Route
+          path="ide"
+          element={
+            <Suspense fallback={<div>Loading IDE...</div>}>
+              <MonacoIDE />
+            </Suspense>
+          }
+        />
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route
+            path="overview"
+            element={
+              <Suspense fallback={<div>Loading overview…</div>}>
+                <Overview />
+              </Suspense>
+            }
+          />
+          <Route
+            path="site"
+            element={
+              <Suspense fallback={<div>Loading Prompt...</div>}>
+                <PromptSetup />
+              </Suspense>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <Suspense fallback={<div>Loading settings…</div>}>
+                <Settings />
+              </Suspense>
+            }
+          />
+        </Route>
 
-            <Route
-               path="/auth/sign-in"
-               element={
-                  <RedirectIfAuth isAuthenticated={isAuthenticated}>
-                     <SignIn />
-                  </RedirectIfAuth>
-               }
-            />
-            <Route
-               path="/auth/sign-up"
-               element={
-                  <RedirectIfAuth isAuthenticated={isAuthenticated}>
-                     <SignUp />
-                  </RedirectIfAuth>
-               }
-            />
-         </Route>
-      </Routes>
-   );
+        <Route
+          path="/auth/sign-in"
+          element={
+            <RedirectIfAuth isAuthenticated={isAuthenticated}>
+              <SignIn />
+            </RedirectIfAuth>
+          }
+        />
+        <Route
+          path="/auth/sign-up"
+          element={
+            <RedirectIfAuth isAuthenticated={isAuthenticated}>
+              <SignUp />
+            </RedirectIfAuth>
+          }
+        />
+      </Route>
+    </Routes>
+  );
 }

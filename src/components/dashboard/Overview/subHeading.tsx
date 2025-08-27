@@ -1,11 +1,16 @@
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { Plus, Store } from "lucide-react";
 
 export default function SubHeading(): JSX.Element {
+  const { user } = useAuth();
+
+  if (!user) return null;
+
   return (
     <div className="w-full flex items-center justify-between">
       <div className="">
-        <h3 className="text-2xl font-medium normal-case">Welcome back, {"user"}!</h3>
+        <h3 className="text-2xl font-medium normal-case">Welcome back, {user.username}!</h3>
         <div className="flex items-center gap-3">
           <Store size={16} />
           <span className="text-lg font-normal text-muted-foreground">Business Owner</span>

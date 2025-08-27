@@ -1,17 +1,16 @@
 import { Outlet, useLocation } from "react-router";
-import {
-   SidebarInset,
-   SidebarProvider,
-   SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Bell, ChevronDown, LayoutGrid, Settings } from "lucide-react";
 import { FaBolt, FaGithub } from "react-icons/fa";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardLayout(): JSX.Element {
-   const location = useLocation();
-   const pathName = location.pathname;
+  const location = useLocation();
+  const pathName = location.pathname;
+
+  const { user } = useAuth();
 
   return (
     <SidebarProvider>
@@ -27,7 +26,13 @@ export default function DashboardLayout(): JSX.Element {
             <div className="flex">
               <div className="flex items-center justify-end gap-4">
                 <Bell className="text-xl cursor-pointer" />
-                <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white"></div>
+                <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white overflow-hidden">
+                  <img
+                    src={`https://api.dicebear.com/9.x/dylan/svg?seed=T${user?.username ?? "default"}`}
+                    alt="User Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
               </div>
             </div>
           ) : (

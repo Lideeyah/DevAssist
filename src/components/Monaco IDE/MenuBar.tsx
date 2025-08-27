@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { AlignJustify } from "lucide-react";
+// import { AppSidebar } from "../app-sidebar";
+// import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
+// import { Separator } from "@radix-ui/react-dropdown-menu";
 
 interface MenuBarProps {
   isAuthenticated: boolean;
@@ -30,9 +33,25 @@ export default function MenuBar({
 
   return (
     <div className="h-8 flex items-center px-4 gap-4 border-b border-white text-sm bg-gray-850">
-      <div className="cursor-pointer">
-        <AlignJustify size={17} />
+      <div className="">
+        <div className="cursor-pointer">
+          <AlignJustify size={17} />
+        </div>
       </div>
+
+      {/* <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="flex w-full bg-background justify-between pr-4 overflow-hidden border-b h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex items-center gap-2 px-4 w-full">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+              </div>
+            </header>
+          </SidebarInset>
+        </SidebarProvider>
+      </div> */}
+
       <span className="font-bold text-blue-400">DevAssist</span>
 
       {/* File Menu */}

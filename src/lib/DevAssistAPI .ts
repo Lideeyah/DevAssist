@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "https://devassist-api.onrender.com/api";
+const API_BASE = import.meta.env.VITE_API_URL || "https://devassit-api.onrender.com/api";
 
 export class DevAssistAPI {
   private accessToken: string | null = null;
