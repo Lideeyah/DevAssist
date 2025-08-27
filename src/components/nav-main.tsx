@@ -5,6 +5,7 @@ import {
    SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Icon } from "@iconify/react";
+import { Link } from "react-router";
 
 export function NavMain({
    items,
@@ -25,9 +26,13 @@ export function NavMain({
          <SidebarMenu>
             {items.map((item) => (
                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip={item.title}>
-                     {item.icon && <Icon icon={item.icon} width="24" height="24" />}
-                     <span>{item.title}</span>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                     <Link to={item.url}>
+                        {item.icon && (
+                           <Icon icon={item.icon} width="24" height="24" />
+                        )}
+                        <span>{item.title}</span>
+                     </Link>
                   </SidebarMenuButton>
                </SidebarMenuItem>
             ))}

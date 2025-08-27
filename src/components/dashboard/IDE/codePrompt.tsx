@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useProjectManager } from "@/hooks/useProjectManager";
 import AuthModal from "./API/AuthModal";
-import EditCode from "./EditCode";
-import LivePreview from "./LivePreview";
+import LivePreview from "./livePreview";
+import EditCode from "./editCode";
 
 interface UserProfile {
   _id: string;
@@ -94,12 +94,7 @@ export default function CodePrompt() {
       // Update the history with the successful response
       setPromptHistory((prev) =>
         prev.map((item, index) =>
-          index === prev.length - 1
-            ? {
-                ...item,
-                response: "✅ Landing page generated successfully! Check the Code and Preview tabs.",
-              }
-            : item
+          index === prev.length - 1 ? { ...item, response: "✅ Landing page generated successfully! Check the Code and Preview tabs." } : item
         )
       );
 
@@ -110,16 +105,17 @@ export default function CodePrompt() {
       console.error("Project generation failed:", error);
 
       // Update the history with the specific error message
-      setPromptHistory((prev) =>
-        prev.map((item, index) =>
-          index === prev.length - 1
-            ? {
-                ...item,
-                response: `❌ ${error.message || "Failed to generate project. Please try again."}`,
-              }
-            : item
-        )
-      );
+      let errorMessage = "❌ Failed to generate project. Please try again.";
+
+      if (error.message.includes("JSON")) {
+        errorMessage = "❌ The AI response format was unexpected. Please try again with a different prompt.";
+      } else if (error.message.includes("token")) {
+        errorMessage = "❌ Token limit exceeded. Please try again later or upgrade your plan.";
+      } else if (error.message) {
+        errorMessage = `❌ ${error.message}`;
+      }
+
+      setPromptHistory((prev) => prev.map((item, index) => (index === prev.length - 1 ? { ...item, response: errorMessage } : item)));
     } finally {
       setIsGenerating(false);
     }
@@ -230,7 +226,7 @@ export default function CodePrompt() {
                           style={{ width: `${usagePercentage}%` }}
                         />
                       </div>
-                      {!canRequest && <div className="text-xs text-red-400 mt-2">Daily limit reached</div>}
+                      {!canRequest && <div className="text-xs text-red-400 mt-2">⚠️ Daily limit reached</div>}
                     </div>
                   </div>
 
@@ -311,7 +307,7 @@ export default function CodePrompt() {
                 <div className="flex items-center w-fit rounded-full bg-neutral-900 p-1 border border-neutral-700">
                   <button
                     className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                      activeTab === "code" ? "bg-black text-white" : "bg-neutral-900 text-neutral-400"
+                      activeTab === "preview" ? "bg-neutral-900 text-neutral-400" : "bg-black text-white"
                     }`}
                     onClick={() => setActiveTab("code")}
                   >
@@ -380,7 +376,7 @@ export default function CodePrompt() {
                 </button>
                 <button
                   className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                    activeTab === "preview" ? "bg-black text-blue-500" : "bg-neutral-900 text-neutral-400"
+                    activeTab === "code" ? "bg-black text-blue-500" : "bg-neutral-900 text-neutral-400"
                   }`}
                   onClick={() => setActiveTab("preview")}
                 >

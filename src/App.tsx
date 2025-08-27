@@ -4,7 +4,7 @@ import LandingPage from "@/pages/landing-page";
 import SignIn from "@/pages/sign-in";
 import SignUp from "@/pages/sign-up";
 import Layout from "@/components/router/layout";
-import { RedirectIfAuth } from "@/components/router/auth";
+import { RedirectIfAuth, ProtectedRoute } from "@/components/router/auth";
 
 import OnboardingLayout from "@/pages/onboarding/layout";
 import SelectCountry from "@/pages/onboarding/select-country";
@@ -53,6 +53,50 @@ export default function App() {
           />
           <Route
             path="site"
+            element={
+              <Suspense fallback={<div>Loading Prompt...</div>}>
+                <PromptSetup />
+              </Suspense>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <Suspense fallback={<div>Loading settings…</div>}>
+                <Settings />
+              </Suspense>
+            }
+          />
+        </Route>
+        <Route
+          path="ide"
+          element={
+            <Suspense fallback={<div>Loading IDE...</div>}>
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <MonacoIDE />
+              </ProtectedRoute>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route
+            path="overview"
+            element={
+              <Suspense fallback={<div>Loading overview…</div>}>
+                <Overview />
+              </Suspense>
+            }
+          />
+          <Route
+            path="prompt"
             element={
               <Suspense fallback={<div>Loading Prompt...</div>}>
                 <PromptSetup />
