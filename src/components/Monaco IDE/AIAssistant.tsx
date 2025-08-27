@@ -175,17 +175,10 @@ export default function AIAssistant({
           </div>
         )}
 
-        {/* Conversation */}
-        {conversation.map((message: any, index: number) => (
-          <div key={index} className={`p-3 rounded-lg ${message.role === "user" ? "bg-secondary border border-white ml-8" : "border border-white"}`}>
-            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          </div>
-        ))}
-
         {/* Action buttons */}
         <div className="flex gap-2">
           <button
-            className="p-2 px-4 bg-foreground font-semibold text-secondary cursor-pointer transition-all duration-200 rounded-sm hover:scale-95 disabled:opacity-50"
+            className="p-2 px-4 bg-foreground font-semibold text-secondary cursor-pointer transition-all duration-200 rounded-sm hover:scale-95 disabled:cursor-not-allowed"
             onClick={handleExplainClick}
             disabled={!activeFile || !isAuthenticated || isAiResponding}
             title="Explain current code"
@@ -193,7 +186,7 @@ export default function AIAssistant({
             Explain
           </button>
           <button
-            className="p-2 px-4 bg-green-200 font-semibold text-green-600 cursor-pointer transition-all duration-200 rounded-sm hover:scale-95 disabled:opacity-50"
+            className="p-2 px-4 bg-green-200 font-semibold text-green-600 cursor-pointer transition-all duration-200 rounded-sm hover:scale-95 disabled:cursor-not-allowed"
             onClick={handleGenerateClick}
             disabled={!isAuthenticated || isAiResponding}
             title="Generate code"
@@ -201,6 +194,13 @@ export default function AIAssistant({
             Generate code
           </button>
         </div>
+
+        {/* Conversation */}
+        {conversation.map((message: any, index: number) => (
+          <div key={index} className={`p-3 rounded-lg ${message.role === "user" ? "bg-secondary border border-white ml-8" : "border border-white"}`}>
+            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          </div>
+        ))}
 
         {isAiResponding && (
           <div className="p-3 rounded-lg bg-secondary border border-white">
