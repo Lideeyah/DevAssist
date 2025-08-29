@@ -1,5 +1,20 @@
 import { useState, useEffect } from "react";
-import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2, User, Code, Monitor, FolderOpen } from "lucide-react";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
+import {
+  GitMerge,
+  Link,
+  Mic,
+  MonitorSmartphone,
+  Scaling,
+  SendHorizonal,
+  Undo2,
+  User,
+  Code,
+  Monitor,
+  FolderOpen,
+} from "lucide-react";
 import SplitPane from "react-split-pane";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -23,12 +38,18 @@ interface PromptHistory {
 
 export default function CodePrompt() {
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [deviceSize, setDeviceSize] = useState<"desktop" | "laptop" | "phone">("desktop");
+  const [deviceSize, setDeviceSize] = useState<"desktop" | "laptop" | "phone">(
+    "desktop"
+  );
   const [splitSize, setSplitSize] = useState(310);
   const [activeTab, setActiveTab] = useState<"code" | "preview">("preview");
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: 10000, remaining: 10000 });
+  const [tokenUsage, setTokenUsage] = useState({
+    used: 0,
+    limit: 10000,
+    remaining: 10000,
+  });
   const [canRequest, setCanRequest] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -37,7 +58,43 @@ export default function CodePrompt() {
   const [mainFile, setMainFile] = useState<string>("index.html");
   const [promptHistory, setPromptHistory] = useState<PromptHistory[]>([]);
 
-  const { currentProject, files, isGenerating: isProjectGenerating, generateProjectFromPrompt, loadProjectFiles, setFiles } = useProjectManager();
+  const {
+    currentProject,
+    files,
+    isGenerating: isProjectGenerating,
+    generateProjectFromPrompt,
+    setFiles,
+  } = useProjectManager();
+  // Speech recognition ==================================
+  // In your component
+  const {
+    transcript,
+    listening,
+    browserSupportsSpeechRecognition,
+    resetTranscript,
+  } = useSpeechRecognition();
+
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser does not support speech recognition.</span>;
+  }
+
+  const handleSpeechClick = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      resetTranscript(); // clear previous transcript
+      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+    }
+  };
+
+  // Update prompt when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setPrompt(transcript);
+    }
+  }, [transcript]);
+
+  // =================================================================
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -74,7 +131,8 @@ export default function CodePrompt() {
   };
 
   const handleSendPrompt = async () => {
-    if (!prompt.trim() || !canRequest || isGenerating || !isAuthenticated) return;
+    if (!prompt.trim() || !canRequest || isGenerating || !isAuthenticated)
+      return;
 
     setIsGenerating(true);
     const currentPrompt = prompt;
@@ -94,7 +152,13 @@ export default function CodePrompt() {
       // Update the history with the successful response
       setPromptHistory((prev) =>
         prev.map((item, index) =>
-          index === prev.length - 1 ? { ...item, response: "✅ Landing page generated successfully! Check the Code and Preview tabs." } : item
+          index === prev.length - 1
+            ? {
+                ...item,
+                response:
+                  "✅ Landing page generated successfully! Check the Code and Preview tabs.",
+              }
+            : item
         )
       );
 
@@ -108,14 +172,20 @@ export default function CodePrompt() {
       let errorMessage = "❌ Failed to generate project. Please try again.";
 
       if (error.message.includes("JSON")) {
-        errorMessage = "❌ The AI response format was unexpected. Please try again with a different prompt.";
+        errorMessage =
+          "❌ The AI response format was unexpected. Please try again with a different prompt.";
       } else if (error.message.includes("token")) {
-        errorMessage = "❌ Token limit exceeded. Please try again later or upgrade your plan.";
+        errorMessage =
+          "❌ Token limit exceeded. Please try again later or upgrade your plan.";
       } else if (error.message) {
         errorMessage = `❌ ${error.message}`;
       }
 
-      setPromptHistory((prev) => prev.map((item, index) => (index === prev.length - 1 ? { ...item, response: errorMessage } : item)));
+      setPromptHistory((prev) =>
+        prev.map((item, index) =>
+          index === prev.length - 1 ? { ...item, response: errorMessage } : item
+        )
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -130,7 +200,9 @@ export default function CodePrompt() {
 
     try {
       await api.updateFile(currentProject._id, filename, content);
-      setFiles((prev) => prev.map((f) => (f.filename === filename ? { ...f, content } : f)));
+      setFiles((prev) =>
+        prev.map((f) => (f.filename === filename ? { ...f, content } : f))
+      );
     } catch (error) {
       console.error("Failed to update file:", error);
     }
@@ -160,7 +232,11 @@ export default function CodePrompt() {
   };
 
   const toggleDeviceSize = () => {
-    const sizes: ("desktop" | "laptop" | "phone")[] = ["desktop", "laptop", "phone"];
+    const sizes: ("desktop" | "laptop" | "phone")[] = [
+      "desktop",
+      "laptop",
+      "phone",
+    ];
     const currentIndex = sizes.indexOf(deviceSize);
     const nextIndex = (currentIndex + 1) % sizes.length;
     setDeviceSize(sizes[nextIndex]);
@@ -204,11 +280,20 @@ export default function CodePrompt() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <User size={14} className="text-blue-400" />
-                          <span className="text-sm text-neutral-300">{user?.username || "Guest"}</span>
-                          {user?.role && <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">{user.role}</span>}
+                          <span className="text-sm text-neutral-300">
+                            {user?.username || "Guest"}
+                          </span>
+                          {user?.role && (
+                            <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
+                              {user.role}
+                            </span>
+                          )}
                         </div>
                         {isAuthenticated && (
-                          <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 transition-colors">
+                          <button
+                            onClick={handleLogout}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                          >
                             Logout
                           </button>
                         )}
@@ -218,15 +303,27 @@ export default function CodePrompt() {
                         <span className="text-neutral-400">
                           Tokens: {tokenUsage.used}/{tokenUsage.limit}
                         </span>
-                        <span className={isLowOnTokens ? "text-red-400" : "text-green-400"}>{Math.round(usagePercentage)}%</span>
+                        <span
+                          className={
+                            isLowOnTokens ? "text-red-400" : "text-green-400"
+                          }
+                        >
+                          {Math.round(usagePercentage)}%
+                        </span>
                       </div>
                       <div className="w-full bg-neutral-700 rounded-full h-1.5">
                         <div
-                          className={`h-1.5 rounded-full transition-all ${isLowOnTokens ? "bg-red-500" : "bg-blue-500"}`}
+                          className={`h-1.5 rounded-full transition-all ${
+                            isLowOnTokens ? "bg-red-500" : "bg-blue-500"
+                          }`}
                           style={{ width: `${usagePercentage}%` }}
                         />
                       </div>
-                      {!canRequest && <div className="text-xs text-red-400 mt-2">⚠️ Daily limit reached</div>}
+                      {!canRequest && (
+                        <div className="text-xs text-red-400 mt-2">
+                          ⚠️ Daily limit reached
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -237,7 +334,9 @@ export default function CodePrompt() {
                         {/* Prompt Display */}
                         <div className="border rounded-sm mb-2 border-neutral-700">
                           <div className="bg-neutral-900 w-full min-h-[60px] p-3 text-sm">
-                            <div className="text-neutral-200 whitespace-pre-wrap">{item.prompt}</div>
+                            <div className="text-neutral-200 whitespace-pre-wrap">
+                              {item.prompt}
+                            </div>
                           </div>
                         </div>
 
@@ -250,7 +349,9 @@ export default function CodePrompt() {
                                 {item.response}
                               </div>
                             ) : (
-                              <div className="text-neutral-200 whitespace-pre-wrap">{item.response}</div>
+                              <div className="text-neutral-200 whitespace-pre-wrap">
+                                {item.response}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -279,7 +380,12 @@ export default function CodePrompt() {
                     <div className="absolute bottom-3 right-3">
                       <Button
                         onClick={handleSendPrompt}
-                        disabled={!prompt.trim() || !canRequest || isGenerating || !isAuthenticated}
+                        disabled={
+                          !prompt.trim() ||
+                          !canRequest ||
+                          isGenerating ||
+                          !isAuthenticated
+                        }
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 disabled:text-neutral-400"
                       >
@@ -291,8 +397,19 @@ export default function CodePrompt() {
                       </Button>
                     </div>
                     <div className="absolute bottom-3 left-2 flex items-center gap-2">
-                      <Link size={14} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
-                      <Mic size={14} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
+                      <Link
+                        size={20}
+                        className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors"
+                      />
+                      <Mic
+                        onClick={handleSpeechClick}
+                        size={20}
+                        className={`cursor-pointer transition-colors ${
+                          listening
+                            ? "text-green-600 animate-pulse-scale" // custom heartbeat effect
+                            : "text-neutral-400 hover:text-blue-500"
+                        }`}
+                      />
                     </div>
                   </div>
                 </div>
@@ -302,12 +419,18 @@ export default function CodePrompt() {
             )}
 
             {/* Right - Preview section */}
-            <div className={`w-full pr-5 max-h-full h-[calc(100vh-78px)] ${isFullScreen ? "pl-5" : ""}`}>
+            <div
+              className={`w-full pr-5 max-h-full h-[calc(100vh-78px)] ${
+                isFullScreen ? "pl-5" : ""
+              }`}
+            >
               <div className="space-y-3">
                 <div className="flex items-center w-fit rounded-full bg-neutral-900 p-1 border border-neutral-700">
                   <button
                     className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                      activeTab === "preview" ? "bg-neutral-900 text-neutral-400" : "bg-black text-white"
+                      activeTab === "preview"
+                        ? "bg-neutral-900 text-neutral-400"
+                        : "bg-black text-white"
                     }`}
                     onClick={() => setActiveTab("code")}
                   >
@@ -316,7 +439,9 @@ export default function CodePrompt() {
                   </button>
                   <button
                     className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                      activeTab === "preview" ? "bg-black text-blue-500" : "bg-neutral-900 text-neutral-400"
+                      activeTab === "preview"
+                        ? "bg-black text-blue-500"
+                        : "bg-neutral-900 text-neutral-400"
                     }`}
                     onClick={() => setActiveTab("preview")}
                   >
@@ -327,7 +452,10 @@ export default function CodePrompt() {
 
                 <div className="w-full">
                   <div className="flex justify-between w-full items-center gap-4">
-                    <Undo2 size={17} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
+                    <Undo2
+                      size={17}
+                      className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors"
+                    />
                     <div className="flex relative w-full">
                       <div className="absolute top-2 left-3 text-neutral-400">
                         <GitMerge size={13} />
@@ -335,26 +463,40 @@ export default function CodePrompt() {
                       <input
                         type="text"
                         className="border rounded-full w-full h-[2rem] pl-10 text-sm bg-neutral-900 border-neutral-600 focus:border-blue-500 focus:outline-none transition-colors text-neutral-300"
-                        value={currentProject ? `${currentProject.name}/` : "No project/"}
+                        value={
+                          currentProject
+                            ? `${currentProject.name}/`
+                            : "No project/"
+                        }
                         readOnly
                       />
                     </div>
                     <MonitorSmartphone
                       size={17}
                       className={`cursor-pointer transition-colors ${
-                        deviceSize !== "desktop" ? "text-blue-500" : "text-neutral-400 hover:text-blue-500"
+                        deviceSize !== "desktop"
+                          ? "text-blue-500"
+                          : "text-neutral-400 hover:text-blue-500"
                       }`}
                       onClick={toggleDeviceSize}
                     />
                     <Scaling
                       size={17}
-                      className={`cursor-pointer transition-colors ${isFullScreen ? "text-blue-500" : "text-neutral-400 hover:text-blue-500"}`}
+                      className={`cursor-pointer transition-colors ${
+                        isFullScreen
+                          ? "text-blue-500"
+                          : "text-neutral-400 hover:text-blue-500"
+                      }`}
                       onClick={toggleFullScreen}
                     />
                   </div>
 
                   <div className="w-full border rounded-sm mt-4 border-neutral-700 h-[calc(100vh-198px)]">
-                    <LivePreview files={files} mainFile={mainFile} deviceSize={deviceSize} />
+                    <LivePreview
+                      files={files}
+                      mainFile={mainFile}
+                      deviceSize={deviceSize}
+                    />
                   </div>
                 </div>
               </div>
@@ -367,7 +509,9 @@ export default function CodePrompt() {
               <div className="flex items-center w-fit rounded-full bg-neutral-900 p-1 border border-neutral-700">
                 <button
                   className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                    activeTab === "code" ? "bg-black text-white" : "bg-neutral-900 text-neutral-400"
+                    activeTab === "code"
+                      ? "bg-black text-white"
+                      : "bg-neutral-900 text-neutral-400"
                   }`}
                   onClick={() => setActiveTab("code")}
                 >
@@ -376,7 +520,9 @@ export default function CodePrompt() {
                 </button>
                 <button
                   className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                    activeTab === "code" ? "bg-black text-blue-500" : "bg-neutral-900 text-neutral-400"
+                    activeTab === "code"
+                      ? "bg-black text-blue-500"
+                      : "bg-neutral-900 text-neutral-400"
                   }`}
                   onClick={() => setActiveTab("preview")}
                 >
@@ -387,14 +533,24 @@ export default function CodePrompt() {
 
               {files.length > 0 ? (
                 <div className="w-full overflow-hidden h-[calc(100vh-120px)] border border-neutral-700 rounded-sm">
-                  <EditCode files={files} currentFile={currentFile} onFileSelect={handleFileSelect} onFileUpdate={handleFileUpdate} />
+                  <EditCode
+                    files={files}
+                    currentFile={currentFile}
+                    onFileSelect={handleFileSelect}
+                    onFileUpdate={handleFileUpdate}
+                  />
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-[calc(100vh-120px)] text-neutral-500">
                   <div className="text-center">
                     <FolderOpen size={48} className="mx-auto mb-4 opacity-50" />
-                    <p>No project files yet. Generate a project by entering a prompt!</p>
-                    <p className="text-sm mt-2">Try: "Create a modern landing page for a tech startup"</p>
+                    <p>
+                      No project files yet. Generate a project by entering a
+                      prompt!
+                    </p>
+                    <p className="text-sm mt-2">
+                      Try: "Create a modern landing page for a tech startup"
+                    </p>
                   </div>
                 </div>
               )}
@@ -403,7 +559,11 @@ export default function CodePrompt() {
         )}
       </div>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={handleLogin}
+      />
     </>
   );
 }
