@@ -14,7 +14,7 @@ const data = {
     },
     {
       title: "SME Builder",
-      url: "/dashboard/prompt",
+      url: "/dashboard/sme",
       icon: "solar:chat-square-code-bold-duotone",
     },
     {
