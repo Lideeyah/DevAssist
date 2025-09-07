@@ -42,7 +42,14 @@ export default function App() {
           }
         />
 
-        <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="overview" replace />} />
           <Route
             path="overview"
@@ -69,6 +76,7 @@ export default function App() {
             }
           />
         </Route>
+
         <Route
           path="ide"
           element={
@@ -79,10 +87,11 @@ export default function App() {
             </Suspense>
           }
         />
+
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -117,15 +126,16 @@ export default function App() {
         <Route
           path="/auth/sign-in"
           element={
-            <RedirectIfAuth isAuthenticated={isAuthenticated}>
+            <RedirectIfAuth>
               <SignIn />
             </RedirectIfAuth>
           }
         />
+
         <Route
           path="/auth/sign-up"
           element={
-            <RedirectIfAuth isAuthenticated={isAuthenticated}>
+            <RedirectIfAuth>
               <SignUp />
             </RedirectIfAuth>
           }
