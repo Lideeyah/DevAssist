@@ -7,6 +7,7 @@ import { useProjectManager } from "@/hooks/useProjectManager";
 import AuthModal from "./API/AuthModal";
 import LivePreview from "./livePreview";
 import EditCode from "./editCode";
+import { OnboardState } from "@/types/onboarding";
 
 interface UserProfile {
   _id: string;
@@ -36,6 +37,7 @@ export default function CodePrompt() {
   const [currentFile, setCurrentFile] = useState<string>("");
   const [mainFile, setMainFile] = useState<string>("index.html");
   const [promptHistory, setPromptHistory] = useState<PromptHistory[]>([]);
+  const onboardingData: OnboardState = JSON.parse(localStorage.getItem("onboard:v1") ?? "{}");
 
   const { currentProject, files, isGenerating: isProjectGenerating, generateProjectFromPrompt, loadProjectFiles, setFiles } = useProjectManager();
 
@@ -206,6 +208,7 @@ export default function CodePrompt() {
                           <User size={14} className="text-blue-400" />
                           <span className="text-sm text-neutral-300">{user?.username || "Guest"}</span>
                           {user?.role && <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">{user.role}</span>}
+                          <span className="text-lg font-normal text-muted-foreground">{onboardingData.path.selected}</span>
                         </div>
                         {isAuthenticated && (
                           <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 transition-colors">

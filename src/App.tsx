@@ -41,6 +41,7 @@ export default function App() {
             </Suspense>
           }
         />
+
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Navigate to="overview" replace />} />
           <Route
@@ -52,7 +53,7 @@ export default function App() {
             }
           />
           <Route
-            path="site"
+            path="sme"
             element={
               <Suspense fallback={<div>Loading Prompt...</div>}>
                 <PromptSetup />

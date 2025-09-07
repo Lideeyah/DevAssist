@@ -9,6 +9,11 @@ import MenuBar from "./MenuBar";
 import { api } from "@/lib/DevAssistAPI ";
 import { aiService } from "@/lib/AIService ";
 import Terminal from "./terminal";
+import { Outlet } from "react-router";
+import { Bell, X } from "lucide-react";
+import { Separator } from "@radix-ui/react-dropdown-menu";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
+import { AppSidebar } from "../app-sidebar";
 
 export default function MonacoIDE() {
   const [files, setFiles] = useState<any[]>([]);
@@ -18,6 +23,7 @@ export default function MonacoIDE() {
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   const [isTerminalVisible, setIsTerminalVisible] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [conversation, setConversation] = useState([
     {
       role: "assistant",
@@ -606,68 +612,122 @@ print("Hello World")`;
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen relative">
       {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />}
 
-      <MenuBar
-        isAuthenticated={isAuthenticated}
-        user={user}
-        onNewFile={newFile}
-        onNewFolder={newFolder}
-        onOpenFile={openFileFromDisk}
-        onOpenFolder={openFolderFromDisk}
-        onSaveFile={saveFile}
-        onSaveAllFiles={saveAllFiles}
-        onLogin={() => setShowAuthModal(true)}
-        onLogout={handleLogout}
-      />
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex w-full bg-background justify-between pr-4 overflow-hidden border-b border-white h-12 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex items-center pl-4 w-fit">
+              <SidebarTrigger className="-ml-1" />
+              <Separator className="mr-2 data-[orientation=vertical]:h-4" />
+            </div>
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        <FileExplorer
-          files={files}
-          folders={folders}
-          activeFile={activeFile}
-          onFileClick={openFile}
-          onAddFile={addFile}
-          onAddFolder={addFolder}
-          onDeleteFile={deleteFile}
-          onDeleteFolder={deleteFolder}
-          onToggleFolder={toggleFolder}
-        />
+            <div className="flex items-center w-full">
+              <MenuBar
+                isAuthenticated={isAuthenticated}
+                user={user}
+                onNewFile={newFile}
+                onNewFolder={newFolder}
+                onOpenFile={openFileFromDisk}
+                onOpenFolder={openFolderFromDisk}
+                onSaveFile={saveFile}
+                onSaveAllFiles={saveAllFiles}
+                onLogin={() => setShowAuthModal(true)}
+                onLogout={handleLogout}
+                setMenuOpen={setMenuOpen}
+                menuOpen={menuOpen}
+              />
 
-        {/* Editor Area */}
-        <div className="flex-1 flex flex-col border-r border-white relative">
-          <EditorTabs openFiles={openFiles} activeFile={activeFile} onFileClick={openFile} onCloseFile={closeFile} />
+              {menuOpen && (
+                <div className="absolute left-35 top-12 w-48 bg-black border-white rounded shadow-lg">
+                  <div className="py-1 border border-white relative">
+                    <div onClick={() => setMenuOpen(!menuOpen)} className="absolute top-2 w-fit z-10 cursor-pointer -right-7">
+                      <X size={20} />
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={newFile}>
+                      New File
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={newFolder}>
+                      New Folder
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={openFile}>
+                      Open File
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={openFile}>
+                      Open Folder
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={saveFile}>
+                      Save
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={saveAllFiles}>
+                      Save All
+                    </div>
+                    <hr className="border-white my-1" />
+                    {isAuthenticated ? (
+                      <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={handleLogout}>
+                        Logout
+                      </div>
+                    ) : (
+                      <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={() => setShowAuthModal(true)}>
+                        Login
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </header>
 
-          <CodeEditor activeFile={activeFile} onContentChange={updateFile} onEditorMount={handleEditorDidMount} />
+          {/* Main Content */}
+          <div className="flex flex-1 overflow-hidden">
+            <FileExplorer
+              files={files}
+              folders={folders}
+              activeFile={activeFile}
+              onFileClick={openFile}
+              onAddFile={addFile}
+              onAddFolder={addFolder}
+              onDeleteFile={deleteFile}
+              onDeleteFolder={deleteFolder}
+              onToggleFolder={toggleFolder}
+            />
 
-          <div className="w-full absolute bottom-0 right-0 left-0 z-[9999]">
-            <Terminal isVisible={isTerminalVisible} onClose={() => setIsTerminalVisible(false)} user={user} currentDirectory="~/project" />
+            {/* Editor Area */}
+            <div className="flex-1 flex flex-col border-r border-white relative">
+              <EditorTabs openFiles={openFiles} activeFile={activeFile} onFileClick={openFile} onCloseFile={closeFile} />
+
+              <CodeEditor activeFile={activeFile} onContentChange={updateFile} onEditorMount={handleEditorDidMount} />
+
+              <div className="w-full absolute bottom-0 right-0 left-0 z-[9999]">
+                <Terminal isVisible={isTerminalVisible} onClose={() => setIsTerminalVisible(false)} user={user} currentDirectory="~/project" />
+              </div>
+            </div>
+
+            <AIAssistant
+              isAuthenticated={isAuthenticated}
+              isAiAnalyzing={isAiAnalyzing}
+              aiSuggestions={aiSuggestions}
+              conversation={conversation}
+              isAiResponding={isAiResponding}
+              activeFile={activeFile}
+              onSendMessage={handleSendMessage}
+              onApplySuggestion={applySuggestion}
+              onExplainCode={handleExplainCode}
+              onGenerateCode={handleGenerateCode}
+              onReplaceContent={replaceFileContent}
+            />
           </div>
-        </div>
 
-        <AIAssistant
-          isAuthenticated={isAuthenticated}
-          isAiAnalyzing={isAiAnalyzing}
-          aiSuggestions={aiSuggestions}
-          conversation={conversation}
-          isAiResponding={isAiResponding}
-          activeFile={activeFile}
-          onSendMessage={handleSendMessage}
-          onApplySuggestion={applySuggestion}
-          onExplainCode={handleExplainCode}
-          onGenerateCode={handleGenerateCode}
-          onReplaceContent={replaceFileContent}
-        />
-      </div>
-
-      <StatusBar
-        activeFile={activeFile}
-        isAuthenticated={isAuthenticated}
-        isTerminalVisible={isTerminalVisible}
-        onToggleTerminal={() => setIsTerminalVisible(!isTerminalVisible)}
-      />
+          <StatusBar
+            activeFile={activeFile}
+            isAuthenticated={isAuthenticated}
+            isTerminalVisible={isTerminalVisible}
+            onToggleTerminal={() => setIsTerminalVisible(!isTerminalVisible)}
+          />
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 }

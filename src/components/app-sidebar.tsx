@@ -8,33 +8,33 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/overview",
+      url: "/dashboard/overview",
       isActive: true,
       icon: "solar:code-scan-bold-duotone",
     },
     {
-      title: "Site Builder",
-      url: "/site",
+      title: "SME Builder",
+      url: "/dashboard/prompt",
+      icon: "solar:chat-square-code-bold-duotone",
+    },
+    {
+      title: "IDE",
+      url: "/ide",
       icon: "solar:code-circle-bold-duotone",
     },
     {
       title: "Documentation",
-      url: "/documentation",
-      icon: "solar:documents-bold-duotone",
-    },
-    {
-      title: "Subscription",
-      url: "/subscription",
+      url: "/dashboard/documentation",
       icon: "solar:documents-bold-duotone",
     },
     {
       title: "Deployment",
-      url: "/deployment",
+      url: "/dashboard/deployment",
       icon: "solar:rocket-2-bold-duotone",
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/dashboard/settings",
       icon: "solar:settings-bold-duotone",
     },
   ],
