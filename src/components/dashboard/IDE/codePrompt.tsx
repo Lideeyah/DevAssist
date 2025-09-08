@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2, User, Code, Monitor, FolderOpen } from "lucide-react";
 import SplitPane from "react-split-pane";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import LivePreview from "./livePreview";
 import EditCode from "./editCode";
 import { OnboardState } from "@/types/onboarding";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 interface PromptHistory {
   prompt: string;
@@ -23,19 +24,46 @@ export default function CodePrompt() {
   const [activeTab, setActiveTab] = useState<"code" | "preview">("preview");
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [tokenUsage, setTokenUsage] = useState({ used: 0, limit: 10000, remaining: 10000 });
+  const [tokenUsage, setTokenUsage] = useState({
+    used: 0,
+    limit: 10000,
+    remaining: 10000,
+  });
   const [canRequest, setCanRequest] = useState(true);
   const [currentFile, setCurrentFile] = useState<string>("");
   const [mainFile, setMainFile] = useState<string>("index.html");
   const [promptHistory, setPromptHistory] = useState<PromptHistory[]>([]);
 
   // Use the auth hook instead of local state
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const onboardingData: OnboardState = JSON.parse(localStorage.getItem("onboard:v1") ?? "{}");
 
   const { currentProject, files, isGenerating: isProjectGenerating, generateProjectFromPrompt, loadProjectFiles, setFiles } = useProjectManager();
+
+  // Speech recognition ==================================
+  const { transcript, listening, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition();
+
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser does not support speech recognition.</span>;
+  }
+
+  const handleSpeechClick = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      resetTranscript(); // clear previous transcript
+      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+    }
+  };
+
+  // Update prompt when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setPrompt(transcript);
+    }
+  }, [transcript]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -88,7 +116,12 @@ export default function CodePrompt() {
       // Update the history with the successful response
       setPromptHistory((prev) =>
         prev.map((item, index) =>
-          index === prev.length - 1 ? { ...item, response: "✅ Landing page generated successfully! Check the Code and Preview tabs." } : item
+          index === prev.length - 1
+            ? {
+                ...item,
+                response: "✅ Landing page generated successfully! Check the Code and Preview tabs.",
+              }
+            : item
         )
       );
 
@@ -190,13 +223,20 @@ export default function CodePrompt() {
                 <div className="">
                   <div className="mb-4 top-0 p-3 bg-neutral-800 rounded-sm border border-neutral-700">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <User size={14} className="text-blue-400" />
-                        <span className="text-sm text-neutral-300">{user?.username || "Guest"}</span>
-                        <span className="text-sm text-blue-500 font-semibold">{onboardingData.path?.selected || "User"}</span>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 w-full">
+                          <User size={14} className="text-blue-400" />
+                          <span className="text-sm font-semibold text-neutral-300">{user?.username || "Guest"}</span>
+                        </div>
+                        <div className="w-full justify-end flex">
+                          <span className="text-xs text-blue-500 font-semibold">{onboardingData.path?.selected || "User"}</span>
+                        </div>
                       </div>
                       {/* {isAuthenticated && (
-                        <button onClick={handleLogout} className="text-xs text-red-400 cursor-pointer hover:text-red-300 transition-colors">
+                        <button
+                          onClick={handleLogout}
+                          className="text-xs text-red-400 cursor-pointer hover:text-red-300 transition-colors"
+                        >
                           Logout
                         </button>
                       )} */}
@@ -214,69 +254,79 @@ export default function CodePrompt() {
                         style={{ width: `${usagePercentage}%` }}
                       />
                     </div>
-                    {!canRequest && <div className="text-xs text-red-400 mt-2">⚠️ Daily limit reached</div>}
+                    {!canRequest && <div className="text-xs text-red-400 mt-2">Daily limit reached</div>}
+                  </div>
+
+                  {/* Prompt History Display */}
+                  <div className="flex-1 overflow-y-auto mb-4">
+                    {promptHistory.map((item, index) => (
+                      <div key={index} className="mb-4">
+                        {/* Prompt Display */}
+                        <div className="border rounded-sm mb-2 border-neutral-700">
+                          <div className="bg-neutral-900 w-full min-h-[60px] p-3 text-sm">
+                            <div className="text-neutral-200 whitespace-pre-wrap">{item.prompt}</div>
+                          </div>
+                        </div>
+
+                        {/* AI Response Display */}
+                        <div className="border rounded-sm mb-4 border-neutral-700">
+                          <div className="bg-neutral-900 w-full min-h-[80px] p-3 text-sm">
+                            {item.response.includes("🔄") ? (
+                              <div className="flex items-center text-blue-400">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                                {item.response}
+                              </div>
+                            ) : (
+                              <div className="text-neutral-200 whitespace-pre-wrap">{item.response}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Prompt History Display */}
-                <div className="flex-1 overflow-y-auto mb-4">
-                  {promptHistory.map((item, index) => (
-                    <div key={index} className="mb-4">
-                      {/* Prompt Display */}
-                      <div className="border rounded-sm mb-2 border-neutral-700">
-                        <div className="bg-neutral-900 w-full min-h-[60px] p-3 text-sm">
-                          <div className="text-neutral-200 whitespace-pre-wrap">{item.prompt}</div>
-                        </div>
-                      </div>
-
-                      {/* AI Response Display */}
-                      <div className="border rounded-sm mb-4 border-neutral-700">
-                        <div className="bg-neutral-900 w-full min-h-[80px] p-3 text-sm">
-                          {item.response.includes("🔄") ? (
-                            <div className="flex items-center text-blue-400">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-                              {item.response}
-                            </div>
-                          ) : (
-                            <div className="text-neutral-200 whitespace-pre-wrap">{item.response}</div>
-                          )}
-                        </div>
-                      </div>
+                {/* Input Area */}
+                <div className="flex justify-end">
+                  <div className="w-full relative group">
+                    <textarea
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      disabled={!canRequest || isGenerating || !isAuthenticated}
+                      className="w-full rounded-sm p-2 text-sm font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+                      placeholder={
+                        !isAuthenticated
+                          ? "Please login to use AI features"
+                          : !canRequest
+                          ? "Daily token limit exceeded"
+                          : "Describe your landing page (e.g., 'Create a modern landing page for a tech startup')"
+                      }
+                    />
+                    <div className="absolute bottom-3 right-3">
+                      <Button
+                        onClick={handleSendPrompt}
+                        disabled={!prompt.trim() || !canRequest || isGenerating || !isAuthenticated}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 disabled:text-neutral-400"
+                      >
+                        {isGenerating ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <SendHorizonal size={16} />
+                        )}
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Input Area */}
-              <div className="flex justify-end">
-                <div className="w-full relative group">
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    disabled={!canRequest || isGenerating || !isAuthenticated}
-                    className="w-full rounded-sm p-2 text-sm font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
-                    placeholder={
-                      !isAuthenticated
-                        ? "Please login to use AI features"
-                        : !canRequest
-                        ? "Daily token limit exceeded"
-                        : "Describe your landing page (e.g., 'Create a modern landing page for a tech startup')"
-                    }
-                  />
-                  <div className="absolute bottom-3 right-3">
-                    <Button
-                      onClick={handleSendPrompt}
-                      disabled={!prompt.trim() || !canRequest || isGenerating || !isAuthenticated}
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 disabled:text-neutral-400"
-                    >
-                      {isGenerating ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <SendHorizonal size={16} />}
-                    </Button>
-                  </div>
-                  <div className="absolute bottom-3 left-2 flex items-center gap-2">
-                    <Link size={14} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
-                    <Mic size={14} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
+                    <div className="absolute bottom-3 left-2 flex items-center gap-2">
+                      <Link size={20} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
+                      <Mic
+                        onClick={handleSpeechClick}
+                        size={20}
+                        className={`cursor-pointer transition-colors ${
+                          listening ? "text-green-600 animate-pulse-scale" : "text-neutral-400 hover:text-blue-500"
+                        }`}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -291,7 +341,7 @@ export default function CodePrompt() {
               <div className="flex items-center w-fit rounded-full bg-neutral-900 p-1 border border-neutral-700">
                 <button
                   className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                    activeTab === "code" ? "bg-neutral-900 text-neutral-400" : "bg-black text-white"
+                    activeTab === "preview" ? "bg-neutral-900 text-neutral-400" : "bg-black text-white"
                   }`}
                   onClick={() => setActiveTab("code")}
                 >
@@ -360,7 +410,7 @@ export default function CodePrompt() {
               </button>
               <button
                 className={`text-sm font-medium cursor-pointer hover:scale-95 rounded-full px-4 py-2 flex items-center transition-all ${
-                  activeTab === "code" ? "bg-black text-blue-500" : "bg-neutral-900 text-neutral-400"
+                  activeTab === "preview" ? "bg-black text-blue-500" : "bg-neutral-900 text-neutral-400"
                 }`}
                 onClick={() => setActiveTab("preview")}
               >

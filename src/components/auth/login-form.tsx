@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router"; // Remove useNavigate import
+import { Link, useNavigate } from "react-router";
 import Logo from "../logo";
 import { SiGithub } from "react-icons/si";
 import { useForm } from "react-hook-form";
@@ -27,6 +27,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const navigate = useNavigate();
+
   const togglePasswordVisibility = () => setIsVisible((prevState) => !prevState);
 
   async function onSubmit(data: TSignIn) {
@@ -38,14 +40,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
 
       toast.success("Signed in successfully!");
 
-      // Remove the navigate call - RedirectIfAuth will handle the redirect
-      // The auth system will automatically redirect based on onboarding status
+      navigate("/dashboard");
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
         toast.error("Something went wrong!");
       }
+
       console.log(error);
     }
   }
@@ -56,7 +58,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       await authClient.signIn.social(
         {
           provider: "github",
-          callbackURL: "/dashboard/overview", // This will be handled by RedirectIfAuth
+          callbackURL: "/dashboard",
         },
         {
           onResponse: () => {
