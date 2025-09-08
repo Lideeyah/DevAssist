@@ -16,7 +16,6 @@ import { useAuth } from "@/hooks/use-auth";
 
 export function SignUpForm({ className, ...props }: React.ComponentProps<"div">) {
   const { signup } = useAuth();
-  //   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -56,7 +55,7 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<"div">)
       await authClient.signIn.social(
         {
           provider: "github",
-          callbackURL: "/onboarding/country", // Updated callback URL
+          callbackURL: "/onboarding/country",
         },
         {
           onResponse: () => {

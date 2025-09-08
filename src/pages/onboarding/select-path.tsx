@@ -6,11 +6,11 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth"; // Add this import
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SelectPath() {
   const { state, persist, navigate } = useOutletContext<OnboardOutletContext>();
-  const { updateOnboardingStatus } = useAuth(); // Add this
+  const { updateOnboardingStatus } = useAuth();
   const country = state.country.selected ?? "";
   const [path, setPath] = useState(state.path.selected ?? "");
 
@@ -19,14 +19,6 @@ export default function SelectPath() {
       navigate("/onboarding/country", { replace: true });
     }
   }, [country, navigate]);
-
-  // map titles (or items) to stable keys used in PathKey
-  const titleToKey = (title: string): PathKey => {
-    const t = title.toLowerCase();
-    if (t.includes("team")) return "team";
-    if (t.includes("business") || t.includes("sme") || t.includes("owner")) return "business_owner";
-    return "developer";
-  };
 
   function choose(itemTitle: string) {
     setPath(itemTitle);
@@ -42,28 +34,9 @@ export default function SelectPath() {
       path: { selected: path as PathKey, completed: true },
     });
 
-    // Update onboarding status in backend
     updateOnboardingStatus(true);
-
     navigate("/dashboard");
   }
-
-  // function onNext() {
-  //   if (!path) {
-  //     toast.warning("Please select a path.");
-  //     return;
-  //   }
-
-  //   persist({
-  //     path: { selected: path as PathKey, completed: true },
-  //   });
-
-  //   // Update both backend and localStorage
-  //   updateOnboardingStatus(true);
-  //   localStorage.setItem("onboarding_completed", "true");
-
-  //   navigate("/dashboard");
-  // }
 
   function onBack() {
     navigate("/onboarding/country");
@@ -71,7 +44,7 @@ export default function SelectPath() {
 
   return (
     <main className="py-12 md:py-20 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">Choose your path</h1>
@@ -83,11 +56,11 @@ export default function SelectPath() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-          {whoweserve.map((item) => {
+          {whoweserve.map((item, index) => {
             const isSelected = path === item.title;
             return (
               <div
-                key={item.title}
+                key={index}
                 onClick={() => choose(item.title)}
                 aria-pressed={isSelected}
                 className={cn(
@@ -105,8 +78,8 @@ export default function SelectPath() {
 
                 <div className="flex flex-col justify-between flex-1 w-full mt-6">
                   <ul className="grid gap-4 text-muted-foreground font-medium">
-                    {item.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
+                    {item.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
                         <Icon icon="solar:check-circle-linear" width="20" height="20" className="shrink-0 size-4 mt-1 text-emerald-400" />
                         <span className="text-left">{feature}</span>
                       </li>

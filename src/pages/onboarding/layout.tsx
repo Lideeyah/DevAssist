@@ -1,6 +1,7 @@
 import { OnboardOutletContext, OnboardState } from "@/types/onboarding";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
+import { useAuth } from "@/hooks/use-auth";
 
 const LS_KEY = "onboard:v1";
 const STEPS = ["country", "path"] as const;
@@ -22,6 +23,7 @@ export default function OnboardingLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const mountedRef = useRef(false);
+  const { user, updateOnboardingStatus } = useAuth();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -40,22 +42,7 @@ export default function OnboardingLayout() {
     load();
   }, [load]);
 
-  function persist(patch: Partial<OnboardState>) {
-    setState((prev) => {
-      const merged = {
-        ...(prev ?? { country: {}, path: {} }),
-        ...patch,
-      };
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify(merged));
-      } catch (e) {
-        console.log(e);
-        // ignore local storage errors
-      }
-      return merged;
-    });
-  }
-
+  // Move the navigation logic to useEffect
   useEffect(() => {
     if (loading || state == null) return;
 
@@ -75,6 +62,31 @@ export default function OnboardingLayout() {
     }
   }, [loading, state, location.pathname, navigate]);
 
+  // Safe state update function
+  const persist = useCallback((patch: Partial<OnboardState>) => {
+    setState((prev) => {
+      const merged = {
+        ...(prev ?? { country: {}, path: {} }),
+        ...patch,
+      };
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(merged));
+      } catch (e) {
+        console.log(e);
+        // ignore local storage errors
+      }
+      return merged;
+    });
+  }, []);
+
+  // Function to mark onboarding as completed
+  const completeOnboarding = useCallback(() => {
+    if (user) {
+      // Update the onboarding status in auth context
+      updateOnboardingStatus(true);
+    }
+  }, [user, updateOnboardingStatus]);
+
   if (loading || state == null) {
     return <div>Loading onboarding…</div>;
   }
@@ -89,6 +101,7 @@ export default function OnboardingLayout() {
         navigate(to, { replace: options?.replace });
       }
     },
+    completeOnboarding, // Add this function to the context
   };
 
   return <Outlet context={context} />;

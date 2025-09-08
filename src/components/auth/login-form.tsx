@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import Logo from "../logo";
 import { SiGithub } from "react-icons/si";
 import { useForm } from "react-hook-form";
@@ -27,8 +27,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const navigate = useNavigate();
-
   const togglePasswordVisibility = () => setIsVisible((prevState) => !prevState);
 
   async function onSubmit(data: TSignIn) {
@@ -40,7 +38,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
 
       toast.success("Signed in successfully!");
 
-      navigate("/dashboard");
+      // Don't navigate here - let the authentication flow handle redirection
+      // based on the user's onboarding status
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);

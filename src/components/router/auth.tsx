@@ -1,71 +1,82 @@
-import { Navigate } from "react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router";
+
+export function ProtectedRoute({ children }: { children: JSX.Element }) {
+  const { isAuthenticated, user, isLoading } = useAuth();
+  const [shouldRender, setShouldRender] = useState(false);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        setRedirectTo("/auth/sign-in");
+      } else if (user?.email) {
+        const userOnboardingKey = `onboarding_${user.email.toLowerCase()}`;
+        const storedStatus = localStorage.getItem(userOnboardingKey);
+        const hasCompletedOnboarding = storedStatus === "true";
+
+        if (storedStatus === null) {
+          localStorage.setItem(userOnboardingKey, "true");
+          localStorage.setItem("onboarding_completed", "true");
+          setShouldRender(true);
+        } else if (hasCompletedOnboarding) {
+          setShouldRender(true);
+        } else {
+          setRedirectTo("/onboarding/country");
+        }
+      } else {
+        setShouldRender(true);
+      }
+    }
+  }, [isAuthenticated, isLoading, user]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  if (!shouldRender) {
+    return <div>Loading...</div>;
+  }
+
+  return children;
+}
 
 interface RedirectIfAuthProps {
   children: JSX.Element;
   redirectTo?: string;
 }
 
-// export function RedirectIfAuth({ children, redirectTo = "/dashboard" }: RedirectIfAuthProps) {
-//   const { isAuthenticated, user } = useAuth();
-
-//   if (isAuthenticated) {
-//     // If user hasn't completed onboarding, redirect to onboarding
-//     if (!user?.hasCompletedOnboarding) {
-//       return <Navigate to="/onboarding/country" replace />;
-//     }
-//     // Otherwise redirect to the specified destination (default: dashboard)
-//     return <Navigate to={redirectTo} replace />;
-//   }
-
-//   return children;
-// }
-
 export function RedirectIfAuth({ children, redirectTo = "/dashboard" }: RedirectIfAuthProps) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
-  // Check both backend and localStorage for onboarding status
-  const hasCompletedOnboarding = user?.hasCompletedOnboarding || localStorage.getItem("onboarding_completed") === "true";
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user?.email) {
+      const userOnboardingKey = `onboarding_${user.email.toLowerCase()}`;
+      const storedStatus = localStorage.getItem(userOnboardingKey);
+      const hasCompletedOnboarding = storedStatus === "true";
 
-  if (isAuthenticated) {
-    if (!hasCompletedOnboarding) {
-      return <Navigate to="/onboarding/country" replace />;
+      if (hasCompletedOnboarding) {
+        setRedirectPath(redirectTo);
+      } else {
+        setRedirectPath("/onboarding/country");
+      }
+      setShouldRedirect(true);
     }
-    return <Navigate to={redirectTo} replace />;
+  }, [isAuthenticated, isLoading, user, redirectTo]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  return children;
-}
-
-// export function RedirectIfAuth({ children, redirectTo = "/dashboard" }: RedirectIfAuthProps) {
-//   const { isAuthenticated, user } = useAuth();
-
-//   console.log("RedirectIfAuth - isAuthenticated:", isAuthenticated);
-//   console.log("RedirectIfAuth - user:", user);
-//   console.log("RedirectIfAuth - hasCompletedOnboarding:", user?.hasCompletedOnboarding);
-
-//   if (isAuthenticated) {
-//     // If user hasn't completed onboarding, redirect to onboarding
-//     if (!user?.hasCompletedOnboarding) {
-//       console.log("Redirecting to onboarding - user hasn't completed onboarding");
-//       return <Navigate to="/onboarding/country" replace />;
-//     }
-//     // Otherwise redirect to the specified destination (default: dashboard)
-//     console.log("Redirecting to dashboard - user has completed onboarding");
-//     return <Navigate to={redirectTo} replace />;
-//   }
-
-//   return children;
-// }
-
-export function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const { isAuthenticated, user } = useAuth();
-
-  if (!isAuthenticated) return <Navigate to="/auth/sign-in" replace />;
-
-  // If user hasn't completed onboarding, redirect to onboarding
-  if (!user?.hasCompletedOnboarding) {
-    return <Navigate to="/onboarding/country" replace />;
+  if (shouldRedirect && redirectPath) {
+    return <Navigate to={redirectPath} replace />;
   }
 
   return children;
