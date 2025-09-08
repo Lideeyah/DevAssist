@@ -13,7 +13,7 @@ import { Separator } from "@radix-ui/react-dropdown-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
 import { AppSidebar } from "../app-sidebar";
 import { useAuth } from "@/hooks/use-auth"; // Import useAuth hook
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router"; // Import useNavigate
 
 export default function MonacoIDE() {
   const [files, setFiles] = useState<any[]>([]);
