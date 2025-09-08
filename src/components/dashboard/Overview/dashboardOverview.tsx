@@ -11,7 +11,7 @@ export default function DashboardOverview() {
       </div>
 
       <div className="mt-6">
-        <div className="grid md:grid-cols-2  grid-cols-1 gap-6">
+        <div className="grid lg:grid-cols-2  grid-cols-1 gap-6">
           <div className="border rounded-xl p-5 w-full">
             <div className="space-y-1">
               <h4 className="text-lg">Recent Projects</h4>

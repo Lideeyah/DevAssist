@@ -5,62 +5,64 @@ import { DashboardLogo } from "./dashboard-logo";
 import { useAuth } from "@/hooks/use-auth";
 
 const data = {
-   navMain: [
-      {
-         title: "Dashboard",
-         url: "/dashboard/overview",
-         isActive: true,
-         icon: "solar:code-scan-bold-duotone",
-      },
-      {
-         title: "SME Builder",
-         url: "/dashboard/prompt",
-         icon: "solar:chat-square-code-bold-duotone",
-      },
-      {
-         title: "IDE",
-         url: "/ide",
-         icon: "solar:code-circle-bold-duotone",
-      },
-      {
-         title: "Documentation",
-         url: "/dashboard/documentation",
-         icon: "solar:documents-bold-duotone",
-      },
-      {
-         title: "Deployment",
-         url: "/dashboard/deployment",
-         icon: "solar:rocket-2-bold-duotone",
-      },
-      {
-         title: "Settings",
-         url: "/dashboard/settings",
-         icon: "solar:settings-bold-duotone",
-      },
-   ],
-   projects: [
-      {
-         name: "Design Engineering",
-         url: "#",
-         icon: "solar:code-scan-bold-duotone",
-      },
-      {
-         name: "Sales & Marketing",
-         url: "#",
-         icon: "solar:code-scan-bold-duotone",
-      },
-      {
-         name: "Travel",
-         url: "#",
-         icon: "solar:code-scan-bold-duotone",
-      },
-   ],
+  navMain: [
+    {
+      title: "Dashboard",
+      url: "/dashboard/overview",
+      isActive: true,
+      icon: "solar:code-scan-bold-duotone",
+    },
+    {
+      title: "SME Builder",
+      url: "/dashboard/sme",
+      icon: "solar:chat-square-code-bold-duotone",
+    },
+    {
+      title: "IDE",
+      url: "/ide",
+      icon: "solar:code-circle-bold-duotone",
+    },
+    {
+      title: "Documentation",
+      url: "/dashboard/documentation",
+      icon: "solar:documents-bold-duotone",
+    },
+    {
+      title: "Deployment",
+      url: "/dashboard/deployment",
+      icon: "solar:rocket-2-bold-duotone",
+    },
+    {
+      title: "Settings",
+      url: "/dashboard/settings",
+      icon: "solar:settings-bold-duotone",
+    },
+  ],
+  projects: [
+    {
+      name: "Design Engineering",
+      url: "#",
+      icon: "solar:code-scan-bold-duotone",
+    },
+    {
+      name: "Sales & Marketing",
+      url: "#",
+      icon: "solar:code-scan-bold-duotone",
+    },
+    {
+      name: "Travel",
+      url: "#",
+      icon: "solar:code-scan-bold-duotone",
+    },
+  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
 
-  if (!user) return null;
+  // if (!user) {
+  //   return null;
+  // }
 
   return (
     <Sidebar collapsible="icon" {...props}>
