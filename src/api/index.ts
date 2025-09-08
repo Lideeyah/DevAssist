@@ -84,44 +84,44 @@ class DevAssistAPI {
   //   }
   // }
 
-  // private async refreshAccessToken(): Promise<boolean> {
-  //   if (!this.refreshToken) return false;
+  private async refreshAccessToken(): Promise<boolean> {
+    if (!this.refreshToken) return false;
 
-  //   try {
-  //     const response = await fetch(`${this.baseURL}/auth/refresh`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ refreshToken: this.refreshToken }),
-  //     });
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
+      });
 
-  //     if (response.ok) {
-  //       const result = (await response.json()) as {
-  //         data: { tokens: Tokens };
-  //       };
-  //       this.setTokens(result.data.tokens);
-  //       return true;
-  //     }
-  //   } catch (error) {
-  //     console.error("Token refresh failed:", error);
-  //   }
+      if (response.ok) {
+        const result = (await response.json()) as {
+          data: { tokens: Tokens };
+        };
+        this.setTokens(result.data.tokens);
+        return true;
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+    }
 
-  //   this.clearTokens();
-  //   return false;
-  // }
+    this.clearTokens();
+    return false;
+  }
 
-  // setTokens(tokens: Tokens) {
-  //   this.accessToken = tokens.accessToken;
-  //   this.refreshToken = tokens.refreshToken;
-  //   localStorage.setItem("accessToken", tokens.accessToken);
-  //   localStorage.setItem("refreshToken", tokens.refreshToken);
-  // }
+  setTokens(tokens: Tokens) {
+    this.accessToken = tokens.accessToken;
+    this.refreshToken = tokens.refreshToken;
+    localStorage.setItem("accessToken", tokens.accessToken);
+    localStorage.setItem("refreshToken", tokens.refreshToken);
+  }
 
-  // getTokens() {
-  //   return {
-  //     accessToken: localStorage.getItem("accessToken"),
-  //     refreshToken: localStorage.getItem("refreshToken"),
-  //   };
-  // }
+  getTokens() {
+    return {
+      accessToken: localStorage.getItem("accessToken"),
+      refreshToken: localStorage.getItem("refreshToken"),
+    };
+  }
 
   // clearTokens() {
   //   this.accessToken = null;
