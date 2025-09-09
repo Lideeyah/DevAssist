@@ -59,7 +59,7 @@ export default function EditCode({ files, currentFile, onFileSelect, onFileUpdat
   }
 
   return (
-    <div className="flex h-full bg-neutral-900">
+    <div className="flex  h-[calc(100vh-160px)] overflow-auto bg-neutral-900">
       {/* File sidebar */}
       <div className="w-64 bg-neutral-800 border-r border-neutral-700 p-4 overflow-y-auto">
         <h3 className="text-sm font-medium text-neutral-300 mb-3 flex items-center gap-2">

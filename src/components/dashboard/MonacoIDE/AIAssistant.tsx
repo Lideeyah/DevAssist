@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
-import { SendHorizonal, Lightbulb, Wand2 } from "lucide-react";
+import { SendHorizonal } from "lucide-react";
 
 interface AIAssistantProps {
   isAuthenticated: boolean;

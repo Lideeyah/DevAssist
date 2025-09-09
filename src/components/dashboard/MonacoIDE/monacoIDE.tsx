@@ -8,12 +8,12 @@ import MenuBar from "./MenuBar";
 import { api } from "@/lib/DevAssistAPI ";
 import Terminal from "./terminal";
 import { Outlet } from "react-router";
-import { Bell, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Separator } from "@radix-ui/react-dropdown-menu";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
-import { AppSidebar } from "../app-sidebar";
 import { useAuth } from "@/hooks/use-auth"; // Import useAuth hook
 import { useNavigate } from "react-router"; // Import useNavigate
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function MonacoIDE() {
   const [files, setFiles] = useState<any[]>([]);

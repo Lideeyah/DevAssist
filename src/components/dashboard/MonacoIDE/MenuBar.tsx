@@ -3,7 +3,7 @@
 // import { AppSidebar } from "../app-sidebar";
 // import { SidebarInset, SidebarProvider, SidebarTrigger } from "../ui/sidebar";
 // import { Separator } from "@radix-ui/react-dropdown-menu";
-import logo from "../../assets/logo-blue.svg";
+import logo from "../../../assets/logo-blue.svg";
 
 interface MenuBarProps {
   isAuthenticated: boolean;
@@ -14,7 +14,7 @@ interface MenuBarProps {
   onOpenFolder: () => void;
   onSaveFile: () => void;
   onSaveAllFiles: () => void;
-  onLogin: () => void;
+  // onLogin: () => void;
   onLogout: () => void;
   setMenuOpen: (open: boolean) => void;
   menuOpen: boolean;

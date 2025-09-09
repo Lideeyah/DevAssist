@@ -16,277 +16,109 @@ export function useProjectManager() {
   const [files, setFiles] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const extractJSONFromResponse = (response: string): any => {
+  // --- Parser for plain text AI responses ---
+  const parseFilesFromResponse = (rawResponse: any) => {
     try {
-      // Try to parse directly first
-      return JSON.parse(response);
-    } catch (e) {
-      // If direct parsing fails, try to extract JSON from markdown code blocks
-      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || response.match(/{[\s\S]*}/);
+      const response = typeof rawResponse === "string" ? rawResponse : rawResponse.response;
 
-      if (jsonMatch) {
-        const jsonString = jsonMatch[1] || jsonMatch[0];
-        try {
-          return JSON.parse(jsonString.trim());
-        } catch (parseError) {
-          console.error("Failed to parse extracted JSON:", parseError);
+      console.log("Raw AI response string:", response);
+
+      // Match blocks like: --- filename.ext ---\n<content>
+      const fileRegex = /---\s*([\w.\-]+)\s*---\s*([\s\S]*?)(?=(?:---\s*[\w.\-]+\s*---|$))/g;
+
+      const parsedFiles: any[] = [];
+      let match;
+
+      while ((match = fileRegex.exec(response)) !== null) {
+        const filename = match[1].trim();
+        const content = match[2].trim();
+
+        if (!content) {
+          console.warn(`⚠️ Skipping empty file: ${filename}`);
+          continue;
         }
+
+        let language = "text";
+        if (filename.endsWith(".html")) language = "html";
+        if (filename.endsWith(".css")) language = "css";
+        if (filename.endsWith(".js")) language = "javascript";
+
+        parsedFiles.push({ filename, content, language });
       }
 
-      // If all else fails, try to find any JSON-like structure
-      const braceMatch = response.match(/{[^{}]*}/);
-      if (braceMatch) {
-        try {
-          return JSON.parse(braceMatch[0]);
-        } catch (parseError) {
-          console.error("Failed to parse brace-matched JSON:", parseError);
-        }
+      if (parsedFiles.length === 0) {
+        throw new Error("No valid files parsed from AI response");
       }
 
-      throw new Error("Could not extract valid JSON from AI response");
+      return {
+        projectName: "Generated Project",
+        files: parsedFiles,
+        mainFile: parsedFiles.find((f) => f.filename === "index.html")?.filename || parsedFiles[0].filename,
+      };
+    } catch (err) {
+      console.error("❌ Failed to parse AI response:", err);
+      throw err;
     }
   };
 
-  const generateProjectFromPrompt = useCallback(async (prompt: string): Promise<GeneratedProject> => {
+  const generateProjectFromPrompt = useCallback(async (prompt: string) => {
     setIsGenerating(true);
     try {
-      // Generate project structure using AI with a more specific prompt
-      const aiResponse = await api.generateAIResponse(
-        `Create a complete landing page project for: ${prompt}. 
-         Return ONLY valid JSON with this exact structure - no additional text or explanations:
-         {
-           "projectName": "Descriptive Project Name",
-           "files": [
-             {
-               "filename": "index.html",
-               "content": "<!DOCTYPE html><html><head><title>Page Title</title><link rel='stylesheet' href='styles.css'></head><body><h1>Welcome</h1><script src='script.js'></script></body></html>",
-               "language": "html"
-             },
-             {
-               "filename": "styles.css", 
-               "content": "body { margin: 0; font-family: Arial, sans-serif; } h1 { color: #333; }",
-               "language": "css"
-             },
-             {
-               "filename": "script.js",
-               "content": "console.log('Hello World'); document.addEventListener('DOMContentLoaded', function() { /* your code */ });",
-               "language": "javascript"
-             }
-           ],
-           "mainFile": "index.html"
-         }`,
-        "generate"
-      );
+      const systemPrompt = `
+      Create a simple project for: "${prompt}".
+      Return plain text in this format (NO JSON, NO markdown fences):
 
-      console.log("AI Response:", aiResponse.response);
+      --- index.html ---
+      <!DOCTYPE html>
+      <html>...</html>
 
-      // Parse the AI response
-      let projectData;
-      try {
-        projectData = extractJSONFromResponse(aiResponse.response);
+      --- styles.css ---
+      body { ... }
 
-        // Validate the project data structure
-        if (!projectData || !projectData.files || !Array.isArray(projectData.files)) {
-          throw new Error("Invalid project structure in AI response");
-        }
+      --- script.js ---
+      console.log("hello");
+    `;
 
-        // Ensure we have at least an HTML file
-        const hasHtmlFile = projectData.files.some((file: any) => file.filename.endsWith(".html") || file.language === "html");
+      const aiResponse = await api.generateAIResponse(systemPrompt, "generate");
+      const projectData = parseFilesFromResponse(aiResponse);
 
-        if (!hasHtmlFile) {
-          // If no HTML file, create a basic one
-          projectData.files.unshift({
-            filename: "index.html",
-            content: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${projectData.projectName || "Generated Landing Page"}</title>
-    <style>body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; }</style>
-</head>
-<body>
-    <div style="padding: 20px; text-align: center;">
-        <h1>Welcome to ${projectData.projectName || "Your Landing Page"}</h1>
-        <p>This page was generated by DevAssist AI</p>
-    </div>
-</body>
-</html>`,
-            language: "html",
-          });
-          projectData.mainFile = "index.html";
-        }
-      } catch (e) {
-        console.error("Failed to parse AI response:", e);
-
-        // Fallback: Create a basic project structure
-        projectData = {
-          projectName: prompt.substring(0, 30) + " Landing Page",
-          files: [
-            {
-              filename: "index.html",
-              content: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${prompt.substring(0, 20)} Landing Page</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Welcome to Our ${prompt}</h1>
-            <p>This landing page was AI-generated by DevAssist</p>
-        </header>
-        <main>
-            <section class="hero">
-                <h2>Amazing Features</h2>
-                <p>Discover what makes us special</p>
-            </section>
-        </main>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>`,
-              language: "html",
-            },
-            {
-              filename: "styles.css",
-              content: `body {
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-header {
-    text-align: center;
-    padding: 60px 20px;
-    color: white;
-}
-
-header h1 {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-header p {
-    font-size: 1.2rem;
-    opacity: 0.9;
-}
-
-.hero {
-    background: white;
-    padding: 40px;
-    border-radius: 10px;
-    margin: 20px 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-.hero h2 {
-    color: #667eea;
-    margin-bottom: 20px;
-}
-
-@media (max-width: 768px) {
-    header h1 {
-        font-size: 2rem;
-    }
-    
-    .container {
-        padding: 10px;
-    }
-}`,
-              language: "css",
-            },
-            {
-              filename: "script.js",
-              content: `console.log('Landing page loaded successfully!');
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Add any interactive functionality here
-    console.log('DOM fully loaded and parsed');
-    
-    // Example: Smooth scrolling for anchor links
-    const links = document.querySelectorAll('a[href^="#"]');
-    links.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-});`,
-              language: "javascript",
-            },
-          ],
-          mainFile: "index.html",
-        };
-      }
+      console.log("Parsed project data:", projectData);
 
       // Create project in backend
       const project = await api.createProject({
-        name: projectData.projectName || "Generated Landing Page",
+        name: projectData.projectName,
         description: `Project generated from prompt: ${prompt}`,
         language: "html",
-        tags: ["ai-generated", "landing-page"],
+        tags: ["ai-generated"],
         isPublic: false,
       });
 
-      // Create all files
+      console.log("Project created:", project);
+
+      // Check if project was created successfully and has an ID
+      if (!project || !project._id) {
+        throw new Error("Failed to create project: No project ID returned");
+      }
+
       const createdFiles = [];
-      for (const file of projectData.files || []) {
+      for (const file of projectData.files) {
         try {
           const createdFile = await api.createFile(project._id, {
             filename: file.filename,
             content: file.content,
-            mimeType: file.language ? `text/${file.language}` : undefined,
+            mimeType: `text/${file.language}`,
           });
           createdFiles.push(createdFile);
-        } catch (error) {
-          console.error(`Failed to create file ${file.filename}:`, error);
+          console.log(`File created: ${file.filename}`);
+        } catch (fileError) {
+          console.error(`Failed to create file ${file.filename}:`, fileError);
+          // Continue with other files even if one fails
         }
       }
 
-      // If no files were created successfully, create at least a basic HTML file
+      // If no files were created successfully, throw an error
       if (createdFiles.length === 0) {
-        const fallbackFile = await api.createFile(project._id, {
-          filename: "index.html",
-          content: `<!DOCTYPE html>
-<html>
-<head>
-    <title>Fallback Landing Page</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 40px;
-            text-align: center;
-            background: #f0f0f0;
-        }
-        h1 { color: #333; }
-    </style>
-</head>
-<body>
-    <h1>Welcome to Your Landing Page</h1>
-    <p>This is a fallback page generated by DevAssist</p>
-</body>
-</html>`,
-        });
-        createdFiles.push(fallbackFile);
-        projectData.mainFile = "index.html";
+        throw new Error("Failed to create any files for the project");
       }
 
       setCurrentProject(project);
@@ -295,11 +127,19 @@ document.addEventListener('DOMContentLoaded', function() {
       return {
         projectId: project._id,
         files: createdFiles,
-        mainFile: projectData.mainFile || "index.html",
+        mainFile: projectData.mainFile,
       };
-    } catch (error) {
-      console.error("Project generation failed:", error);
-      throw new Error("Failed to generate project. Please try a different prompt or try again later.");
+    } catch (err) {
+      console.error("Project generation failed:", err);
+
+      // Provide more specific error messages
+      if (err.message.includes("Validation failed")) {
+        throw new Error("Project creation failed due to validation errors. Please try a different prompt.");
+      } else if (err.message.includes("project ID")) {
+        throw new Error("Failed to create project. Please try again.");
+      } else {
+        throw err;
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -310,9 +150,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const projectFiles = await api.getProjectFiles(projectId);
       setFiles(projectFiles);
       return projectFiles;
-    } catch (error) {
-      console.error("Failed to load project files:", error);
-      throw error;
+    } catch (err) {
+      console.error("Failed to load project files:", err);
+      throw err;
     }
   }, []);
 

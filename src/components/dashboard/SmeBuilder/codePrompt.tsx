@@ -18,6 +18,7 @@ interface PromptHistory {
 }
 
 export default function CodePrompt() {
+  // ============ STATE HOOKS ============
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [deviceSize, setDeviceSize] = useState<"desktop" | "laptop" | "phone">("desktop");
   const [splitSize, setSplitSize] = useState(310);
@@ -34,73 +35,155 @@ export default function CodePrompt() {
   const [mainFile, setMainFile] = useState<string>("index.html");
   const [promptHistory, setPromptHistory] = useState<PromptHistory[]>([]);
 
-  // Use the auth hook instead of local state
-  const { user, isAuthenticated, logout } = useAuth();
+  // ============ AUTH & NAVIGATION HOOKS ============
+  const { user, isAuthenticated, logout, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const onboardingData: OnboardState = JSON.parse(localStorage.getItem("onboard:v1") ?? "{}");
+  // ============ PROJECT HOOKS ============
+  const { currentProject, files, generateProjectFromPrompt, setFiles } = useProjectManager();
 
-  const { currentProject, files, isGenerating: isProjectGenerating, generateProjectFromPrompt, loadProjectFiles, setFiles } = useProjectManager();
-
-  // Speech recognition ==================================
+  // ============ SPEECH RECOGNITION HOOKS ============
   const { transcript, listening, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition();
 
-  if (!browserSupportsSpeechRecognition) {
-    return <span>Browser does not support speech recognition.</span>;
-  }
+  // ============ ONBOARDING DATA ============
+  const onboardingData: OnboardState = JSON.parse(localStorage.getItem("onboard:v1") ?? "{}");
 
-  const handleSpeechClick = () => {
-    if (listening) {
-      SpeechRecognition.stopListening();
-    } else {
-      resetTranscript(); // clear previous transcript
-      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+  // ============ USE EFFECTS ============
+
+  // Debug effect - log auth state changes
+  useEffect(() => {
+    console.log("Auth state changed:", { isAuthenticated, authLoading, user });
+  }, [isAuthenticated, authLoading, user]);
+
+  // Load token usage when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log("User authenticated, loading token usage...");
+      loadTokenUsage();
     }
-  };
+  }, [isAuthenticated, user]);
 
-  // Update prompt when transcript changes
+  // Speech recognition effect - update prompt when transcript changes
   useEffect(() => {
     if (transcript) {
       setPrompt(transcript);
     }
   }, [transcript]);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!isAuthenticated) {
-        // Redirect to sign-in if not authenticated
-        navigate("/auth/sign-in");
-        return;
-      }
+  // ============ EVENT HANDLERS ============
 
-      try {
-        await loadTokenUsage();
-      } catch (error) {
-        console.error("Failed to load token usage:", error);
-      }
-    };
-
-    checkAuth();
-  }, [isAuthenticated, navigate]);
+  const handleSpeechClick = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+    }
+  };
 
   const loadTokenUsage = async () => {
     try {
+      console.log("Loading token usage...");
+
+      // Try to get token usage from user object first (it might already be there)
+      if (user?.tokenUsage) {
+        console.log("Using token usage from user object:", user.tokenUsage);
+
+        // Use the daily token usage from the user object
+        const dailyUsage = user.tokenUsage.daily || {
+          tokensUsed: 0,
+          requestCount: 0,
+          date: new Date().toISOString().split("T")[0],
+        };
+
+        setTokenUsage({
+          used: dailyUsage.tokensUsed || 0,
+          limit: 10000, // Your daily limit
+          remaining: 10000 - (dailyUsage.tokensUsed || 0),
+        });
+
+        // You can make requests if you have tokens remaining
+        const canMakeRequest = 10000 - (dailyUsage.tokensUsed || 0) > 0;
+        setCanRequest(canMakeRequest);
+        console.log("Can make requests:", canMakeRequest, "Remaining tokens:", 10000 - (dailyUsage.tokensUsed || 0));
+        return;
+      }
+
+      // Fallback to API call
       const usage = await api.getTokenUsage();
+      console.log("Token usage from API:", usage);
       setTokenUsage(usage.daily);
 
       const canRequestResponse = await api.canMakeAIRequest();
       setCanRequest(canRequestResponse.canMakeRequest);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load token usage:", error);
+
+      // Set safe defaults instead of redirecting
+      setTokenUsage({
+        used: 0,
+        limit: 10000,
+        remaining: 10000,
+      });
+      setCanRequest(true);
     }
   };
+
+  // const handleSendPrompt = async () => {
+  //   if (!prompt.trim() || !canRequest || isGenerating || !isAuthenticated) return;
+
+  //   setIsGenerating(true);
+  //   const currentPrompt = prompt;
+  //   setPrompt("");
+
+  //   try {
+  //     const newHistoryItem: PromptHistory = {
+  //       prompt: currentPrompt,
+  //       response: "🔄 Generating your landing page...",
+  //       timestamp: new Date(),
+  //     };
+  //     setPromptHistory((prev) => [...prev, newHistoryItem]);
+
+  //     const project = await generateProjectFromPrompt(currentPrompt);
+
+  //     setPromptHistory((prev) =>
+  //       prev.map((item, index) =>
+  //         index === prev.length - 1
+  //           ? {
+  //               ...item,
+  //               response: "✅ Landing page generated successfully! Check the Code and Preview tabs.",
+  //             }
+  //           : item
+  //       )
+  //     );
+
+  //     setMainFile(project.mainFile);
+  //     setCurrentFile(project.mainFile);
+  //     setActiveTab("code");
+  //   } catch (error: any) {
+  //     console.error("Project generation failed:", error);
+
+  //     let errorMessage = "Failed to generate project. Please try again.";
+  //     if (error.message.includes("JSON")) {
+  //       errorMessage = "The AI response format was unexpected. Please try again with a different prompt.";
+  //     } else if (error.message.includes("token")) {
+  //       errorMessage = "Token limit exceeded. Please try again later or upgrade your plan.";
+  //     } else if (error.message) {
+  //       errorMessage = `${error.message}`;
+  //     }
+
+  //     setPromptHistory((prev) => prev.map((item, index) => (index === prev.length - 1 ? { ...item, response: errorMessage } : item)));
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
   const handleSendPrompt = async () => {
     if (!prompt.trim() || !canRequest || isGenerating || !isAuthenticated) return;
 
     setIsGenerating(true);
     const currentPrompt = prompt;
-    setPrompt(""); // Clear the input field
+    setPrompt("");
 
     try {
       // Add the prompt to history immediately
@@ -131,18 +214,22 @@ export default function CodePrompt() {
     } catch (error: any) {
       console.error("Project generation failed:", error);
 
-      // Update the history with the specific error message
+      // Handle specific error types
       let errorMessage = "Failed to generate project. Please try again.";
 
-      if (error.message.includes("JSON")) {
+      if (error.isValidationError) {
+        errorMessage = "Validation error: " + (error.validationErrors?.[0]?.message || error.message);
+      } else if (error.message.includes("JSON")) {
         errorMessage = "The AI response format was unexpected. Please try again with a different prompt.";
       } else if (error.message.includes("token")) {
         errorMessage = "Token limit exceeded. Please try again later or upgrade your plan.";
+      } else if (error.message.includes("Validation failed")) {
+        errorMessage = "Project validation failed. Please try a different prompt.";
       } else if (error.message) {
-        errorMessage = `${error.message}`;
+        errorMessage = error.message;
       }
 
-      setPromptHistory((prev) => prev.map((item, index) => (index === prev.length - 1 ? { ...item, response: errorMessage } : item)));
+      setPromptHistory((prev) => prev.map((item, index) => (index === prev.length - 1 ? { ...item, response: `❌ ${errorMessage}` } : item)));
     } finally {
       setIsGenerating(false);
     }
@@ -158,18 +245,19 @@ export default function CodePrompt() {
     try {
       await api.updateFile(currentProject._id, filename, content);
       setFiles((prev) => prev.map((f) => (f.filename === filename ? { ...f, content } : f)));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update file:", error);
     }
   };
 
-  // const handleLogout = () => {
-  //   logout();
-  //   setPromptHistory([]);
-  //   setPrompt("");
-  //   setFiles([]);
-  //   setCurrentFile("");
-  // };
+  const handleLogout = () => {
+    logout();
+    setPromptHistory([]);
+    setPrompt("");
+    setFiles([]);
+    setCurrentFile("");
+    navigate("/auth/sign-in");
+  };
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
@@ -195,14 +283,37 @@ export default function CodePrompt() {
     }
   };
 
+  // ============ DERIVED VALUES ============
   const usagePercentage = (tokenUsage.used / tokenUsage.limit) * 100;
   const isLowOnTokens = usagePercentage > 80;
 
-  // If not authenticated, don't render the component (will be redirected)
-  if (!isAuthenticated) {
-    return null;
+  // ============ RENDER GUARDS ============
+
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser does not support speech recognition.</span>;
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-75px)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <span className="ml-3 text-neutral-400">Checking authentication...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-75px)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-neutral-400">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ============ MAIN RENDER ============
   return (
     <div className="max-h-full h-[calc(100vh-75px)] w-full flex overflow-hidden">
       {activeTab === "preview" ? (
@@ -229,17 +340,11 @@ export default function CodePrompt() {
                           <span className="text-sm font-semibold text-neutral-300">{user?.username || "Guest"}</span>
                         </div>
                         <div className="w-full justify-end flex">
-                          <span className="text-xs text-blue-500 font-semibold">{onboardingData.path?.selected || "User"}</span>
+                          <span className="text-[.65rem] text-blue-600 font-bold uppercase bg-background/80 px-4 rounded-sm p-2">
+                            {onboardingData.path?.selected || "User"}
+                          </span>
                         </div>
                       </div>
-                      {/* {isAuthenticated && (
-                        <button
-                          onClick={handleLogout}
-                          className="text-xs text-red-400 cursor-pointer hover:text-red-300 transition-colors"
-                        >
-                          Logout
-                        </button>
-                      )} */}
                     </div>
 
                     <div className="flex justify-between items-center text-xs mb-1">
@@ -420,7 +525,7 @@ export default function CodePrompt() {
             </div>
 
             {files.length > 0 ? (
-              <div className="w-full overflow-hidden h-[calc(100vh-120px)] border border-neutral-700 rounded-sm">
+              <div className="w-full h-full border border-neutral-700 rounded-sm">
                 <EditCode files={files} currentFile={currentFile} onFileSelect={handleFileSelect} onFileUpdate={handleFileUpdate} />
               </div>
             ) : (

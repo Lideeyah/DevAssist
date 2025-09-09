@@ -3,21 +3,36 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Bell, ChevronDown, LayoutGrid, Settings } from "lucide-react";
 import { FaBolt, FaGithub } from "react-icons/fa";
 import { useAuth } from "@/hooks/use-auth";
-import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import UserDropdown from "@/components/user-dropdow";
+import { useEffect, useState } from "react";
 
 export default function DashboardLayout(): JSX.Element {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const pathName = location.pathname;
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
-  const onboarding = localStorage.getItem("onboard:v1");
+  useEffect(() => {
+    if (user?.email) {
+      const userOnboardingKey = `onboarding_${user.email.toLowerCase()}`;
+      const storedStatus = localStorage.getItem(userOnboardingKey);
+      const hasCompletedOnboarding = storedStatus === "true";
 
-  if (!onboarding) {
-    navigate("/onboarding");
+      if (!hasCompletedOnboarding) {
+        window.location.href = "/onboarding";
+      } else {
+        setIsCheckingOnboarding(false);
+      }
+    } else {
+      setIsCheckingOnboarding(false);
+    }
+  }, [user]);
+
+  if (isCheckingOnboarding) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -74,7 +89,7 @@ export default function DashboardLayout(): JSX.Element {
           )}
         </header>
 
-        <main className="p-6  z-10">
+        <main className="p-6 z-10">
           <Outlet />
         </main>
       </SidebarInset>

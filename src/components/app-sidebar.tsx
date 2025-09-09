@@ -60,13 +60,13 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
 
-  // if (!user) {
-  //   return null;
-  // }
+  if (!user) {
+    return null;
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="bg-accent !p-0 mt-3 mx-2 rounded-lg">
         <DashboardLogo />
       </SidebarHeader>
       <SidebarContent>
