@@ -13,7 +13,7 @@ import { Suspense } from "react";
 import Overview from "@/pages/dashboard/overview";
 import Settings from "@/pages/dashboard/settings";
 import MonacoIDE from "./components/dashboard/MonacoIDE/monacoIDE";
-import SmeSetup from "@/pages/dashboard/SmeSetup";
+import SmeSetup from "@/pages/dashboard/smeSetup";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
 
