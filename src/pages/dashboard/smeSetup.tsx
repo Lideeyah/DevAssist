@@ -1,7 +1,6 @@
-import CodePrompt from "@/components/dashboard/IDE/codePrompt";
+import CodePrompt from "@/components/dashboard/SmeBuilder/codePrompt";
 
-
-export default function PromptSetup() {
+export default function SmeSetup() {
   return (
     <div className="">
       <div className="">

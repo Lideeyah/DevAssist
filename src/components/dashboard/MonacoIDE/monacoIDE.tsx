@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import AuthModal from "../dashboard/IDE/API/AuthModal";
 import StatusBar from "./StatusBar";
 import AIAssistant from "./AIAssistant";
 import CodeEditor from "./CodeEditor";
@@ -7,8 +6,14 @@ import EditorTabs from "./EditorTabs";
 import FileExplorer from "./FileExplorer";
 import MenuBar from "./MenuBar";
 import { api } from "@/lib/DevAssistAPI ";
-import { aiService } from "@/lib/AIService ";
 import Terminal from "./terminal";
+import { Outlet } from "react-router";
+import { X } from "lucide-react";
+import { Separator } from "@radix-ui/react-dropdown-menu";
+import { useAuth } from "@/hooks/use-auth"; // Import useAuth hook
+import { useNavigate } from "react-router"; // Import useNavigate
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function MonacoIDE() {
   const [files, setFiles] = useState<any[]>([]);
@@ -18,6 +23,7 @@ export default function MonacoIDE() {
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   const [isTerminalVisible, setIsTerminalVisible] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [conversation, setConversation] = useState([
     {
       role: "assistant",
@@ -27,34 +33,24 @@ export default function MonacoIDE() {
   ]);
   const [userMessage, setUserMessage] = useState("");
   const [isAiResponding, setIsAiResponding] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Use the auth hook instead of local state
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
 
   // Check authentication status on component mount
   useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = api.isAuthenticated();
-      setIsAuthenticated(authenticated);
+    if (!isAuthenticated) {
+      // Redirect to sign-in if not authenticated
+      navigate("/auth/sign-in");
+      return;
+    }
 
-      if (authenticated) {
-        try {
-          const userProfile = await api.getProfile();
-          setUser(userProfile);
-          loadWorkspace();
-        } catch (error) {
-          console.error("Failed to load profile:", error);
-          handleLogout();
-        }
-      } else {
-        setShowAuthModal(true);
-      }
-    };
-
-    checkAuth();
-  }, []);
+    loadWorkspace();
+  }, [isAuthenticated, navigate]);
 
   const loadWorkspace = () => {
     const savedWorkspace = localStorage.getItem("devassist-workspace");
@@ -143,8 +139,6 @@ def calculate_average(numbers):
     setActiveFile(defaultFiles[0]);
   };
 
-  // Replace all aiService calls with api.generateAIResponse()
-
   const analyzeCode = async () => {
     if (!activeFile || !isAuthenticated) return;
 
@@ -207,7 +201,6 @@ def calculate_average(numbers):
     }
   };
 
-  // Similarly update handleExplainCode and handleGenerateCode
   const handleExplainCode = async () => {
     if (!activeFile || !isAuthenticated) return;
 
@@ -229,34 +222,6 @@ def calculate_average(numbers):
     }
   };
 
-  // const handleGenerateCode = async (prompt: string) => {
-  //   if (!isAuthenticated) return;
-
-  //   setIsAiResponding(true);
-  //   try {
-  //     setConversation((prev) => [
-  //       ...prev,
-  //       {
-  //         role: "user",
-  //         content: `Generate code: ${prompt}`,
-  //       },
-  //     ]);
-
-  //     const response = await api.generateAIResponse(prompt, "generate");
-
-  //     setConversation((prev) => [
-  //       ...prev,
-  //       {
-  //         role: "assistant",
-  //         content: `Here's the code I generated based on your request:\n\n\`\`\`${"text"}\n${response.response}\n\`\`\``,
-  //       },
-  //     ]);
-  //   } catch (error: any) {
-  //     // Handle error...
-  //   } finally {
-  //     setIsAiResponding(false);
-  //   }
-  // };
   const handleGenerateCode = async (prompt: string) => {
     if (!isAuthenticated) return;
 
@@ -489,18 +454,8 @@ print("Hello World")`;
     }
   };
 
-  const handleLogin = (userData: any) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    setShowAuthModal(false);
-    loadWorkspace();
-  };
-
   const handleLogout = () => {
-    api.clearTokens();
-    setUser(null);
-    setIsAuthenticated(false);
-    setShowAuthModal(true);
+    logout();
     setFiles([]);
     setFolders([]);
     setOpenFiles([]);
@@ -605,69 +560,121 @@ print("Hello World")`;
     alert("Folder opening functionality is limited in browser environments. In a desktop app, this would open a folder dialog.");
   };
 
+  // If not authenticated, don't render the component (will be redirected)
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col h-screen">
-      {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onLogin={handleLogin} />}
+    <div className="flex flex-col h-screen relative">
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex w-full bg-background justify-between pr-4 overflow-hidden border-b border-white h-12 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex items-center pl-4 w-fit">
+              <SidebarTrigger className="-ml-1" />
+              <Separator className="mr-2 data-[orientation=vertical]:h-4" />
+            </div>
 
-      <MenuBar
-        isAuthenticated={isAuthenticated}
-        user={user}
-        onNewFile={newFile}
-        onNewFolder={newFolder}
-        onOpenFile={openFileFromDisk}
-        onOpenFolder={openFolderFromDisk}
-        onSaveFile={saveFile}
-        onSaveAllFiles={saveAllFiles}
-        onLogin={() => setShowAuthModal(true)}
-        onLogout={handleLogout}
-      />
+            <div className="flex items-center w-full">
+              <MenuBar
+                isAuthenticated={isAuthenticated}
+                user={user}
+                onNewFile={newFile}
+                onNewFolder={newFolder}
+                onOpenFile={openFileFromDisk}
+                onOpenFolder={openFolderFromDisk}
+                onSaveFile={saveFile}
+                onSaveAllFiles={saveAllFiles}
+                onLogout={handleLogout}
+                setMenuOpen={setMenuOpen}
+                menuOpen={menuOpen}
+              />
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        <FileExplorer
-          files={files}
-          folders={folders}
-          activeFile={activeFile}
-          onFileClick={openFile}
-          onAddFile={addFile}
-          onAddFolder={addFolder}
-          onDeleteFile={deleteFile}
-          onDeleteFolder={deleteFolder}
-          onToggleFolder={toggleFolder}
-        />
+              {menuOpen && (
+                <div className="absolute left-35 top-12 w-48 bg-black border-white rounded shadow-lg">
+                  <div className="py-1 border border-white relative">
+                    <div onClick={() => setMenuOpen(!menuOpen)} className="absolute top-2 w-fit z-10 cursor-pointer -right-7">
+                      <X size={20} />
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={newFile}>
+                      New File
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={newFolder}>
+                      New Folder
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={openFile}>
+                      Open File
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={openFile}>
+                      Open Folder
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={saveFile}>
+                      Save
+                    </div>
+                    <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={saveAllFiles}>
+                      Save All
+                    </div>
+                    <hr className="border-white my-1" />
+                    {isAuthenticated ? (
+                      <div className="px-4 py-2 hover:bg-gray-700 cursor-pointer" onClick={handleLogout}>
+                        Logout
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+            </div>
+          </header>
 
-        {/* Editor Area */}
-        <div className="flex-1 flex flex-col border-r border-white relative">
-          <EditorTabs openFiles={openFiles} activeFile={activeFile} onFileClick={openFile} onCloseFile={closeFile} />
+          {/* Main Content */}
+          <div className="flex flex-1 overflow-hidden">
+            <FileExplorer
+              files={files}
+              folders={folders}
+              activeFile={activeFile}
+              onFileClick={openFile}
+              onAddFile={addFile}
+              onAddFolder={addFolder}
+              onDeleteFile={deleteFile}
+              onDeleteFolder={deleteFolder}
+              onToggleFolder={toggleFolder}
+            />
 
-          <CodeEditor activeFile={activeFile} onContentChange={updateFile} onEditorMount={handleEditorDidMount} />
+            {/* Editor Area */}
+            <div className="flex-1 flex flex-col border-r border-white relative">
+              <EditorTabs openFiles={openFiles} activeFile={activeFile} onFileClick={openFile} onCloseFile={closeFile} />
 
-          <div className="w-full absolute bottom-0 right-0 left-0 z-[9999]">
-            <Terminal isVisible={isTerminalVisible} onClose={() => setIsTerminalVisible(false)} user={user} currentDirectory="~/project" />
+              <CodeEditor activeFile={activeFile} onContentChange={updateFile} onEditorMount={handleEditorDidMount} />
+
+              <div className="w-full absolute bottom-0 right-0 left-0 z-[9999]">
+                <Terminal isVisible={isTerminalVisible} onClose={() => setIsTerminalVisible(false)} user={user} currentDirectory="~/project" />
+              </div>
+            </div>
+
+            <AIAssistant
+              isAuthenticated={isAuthenticated}
+              isAiAnalyzing={isAiAnalyzing}
+              aiSuggestions={aiSuggestions}
+              conversation={conversation}
+              isAiResponding={isAiResponding}
+              activeFile={activeFile}
+              onSendMessage={handleSendMessage}
+              onApplySuggestion={applySuggestion}
+              onExplainCode={handleExplainCode}
+              onGenerateCode={handleGenerateCode}
+              onReplaceContent={replaceFileContent}
+            />
           </div>
-        </div>
 
-        <AIAssistant
-          isAuthenticated={isAuthenticated}
-          isAiAnalyzing={isAiAnalyzing}
-          aiSuggestions={aiSuggestions}
-          conversation={conversation}
-          isAiResponding={isAiResponding}
-          activeFile={activeFile}
-          onSendMessage={handleSendMessage}
-          onApplySuggestion={applySuggestion}
-          onExplainCode={handleExplainCode}
-          onGenerateCode={handleGenerateCode}
-          onReplaceContent={replaceFileContent}
-        />
-      </div>
-
-      <StatusBar
-        activeFile={activeFile}
-        isAuthenticated={isAuthenticated}
-        isTerminalVisible={isTerminalVisible}
-        onToggleTerminal={() => setIsTerminalVisible(!isTerminalVisible)}
-      />
+          <StatusBar
+            activeFile={activeFile}
+            isAuthenticated={isAuthenticated}
+            isTerminalVisible={isTerminalVisible}
+            onToggleTerminal={() => setIsTerminalVisible(!isTerminalVisible)}
+          />
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 }

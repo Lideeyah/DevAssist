@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Wifi, WifiOff, Server, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import { OnboardState } from "@/types/onboarding";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) 
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isServerOnline, setIsServerOnline] = useState<boolean | null>(null);
+  const onboardingData: OnboardState = JSON.parse(localStorage.getItem("onboard:v1") ?? "{}");
 
   useEffect(() => {
     if (isOpen) {
@@ -69,7 +71,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }: AuthModalProps) 
       if (isLogin) {
         user = await api.login(email, password);
       } else {
-        user = await api.register({ username, email, password, role: "developer" });
+        user = await api.register({ username, email, password, role: onboardingData.path.selected });
       }
       onLogin(user);
       onClose();

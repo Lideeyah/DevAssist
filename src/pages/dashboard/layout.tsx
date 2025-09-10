@@ -3,19 +3,36 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Bell, ChevronDown, LayoutGrid, Settings } from "lucide-react";
 import { FaBolt, FaGithub } from "react-icons/fa";
 import { useAuth } from "@/hooks/use-auth";
-import { Outlet, useLocation, useNavigate } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import UserDropdown from "@/components/user-dropdow";
+import { useEffect, useState } from "react";
 
 export default function DashboardLayout(): JSX.Element {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const pathName = location.pathname;
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
-  const onboarding = localStorage.getItem("onboard:v1");
+  useEffect(() => {
+    if (user?.email) {
+      const userOnboardingKey = `onboarding_${user.email.toLowerCase()}`;
+      const storedStatus = localStorage.getItem(userOnboardingKey);
+      const hasCompletedOnboarding = storedStatus === "true";
 
-  if (!onboarding) {
-    navigate("/onboarding");
+      if (!hasCompletedOnboarding) {
+        window.location.href = "/onboarding";
+      } else {
+        setIsCheckingOnboarding(false);
+      }
+    } else {
+      setIsCheckingOnboarding(false);
+    }
+  }, [user]);
+
+  if (isCheckingOnboarding) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -28,16 +45,23 @@ export default function DashboardLayout(): JSX.Element {
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
           </div>
 
-          {pathName !== "/dashboard/prompt" ? (
+          {pathName !== "/dashboard/sme" ? (
             <div className="flex">
               <div className="flex items-center justify-end gap-4">
                 <Bell className="text-xl cursor-pointer" />
                 <div className="w-10 h-10 cursor-pointer rounded-full flex items-center justify-center bg-white overflow-hidden">
-                  <img
-                    src={`https://api.dicebear.com/9.x/dylan/svg?seed=T${user?.username ?? "default"}`}
-                    alt="User Avatar"
-                    className="w-full h-full object-cover rounded-full"
-                  />
+                  {!user ? (
+                    <div className="flex gap-4">
+                      <Button asChild variant="outline" size={"lg"}>
+                        <Link to="/auth/sign-up">Sign Up</Link>
+                      </Button>
+                      <Button asChild size={"lg"}>
+                        <Link to="/auth/sign-in">Sign In</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <UserDropdown user={user} align="end" />
+                  )}
                 </div>
               </div>
             </div>
@@ -65,7 +89,7 @@ export default function DashboardLayout(): JSX.Element {
           )}
         </header>
 
-        <main className="p-6  z-10">
+        <main className="p-6 z-10">
           <Outlet />
         </main>
       </SidebarInset>

@@ -3,131 +3,236 @@ import { api } from "@/api";
 import { LoginResponse, SignUpResponse, User } from "@/types/auth";
 
 interface LoginParams {
-   email: string;
-   password: string;
+  email: string;
+  password: string;
 }
 
 interface SignUpParams {
-   fullName: string;
-   email: string;
-   password: string;
+  fullName: string;
+  email: string;
+  password: string;
 }
 
 interface AuthContext {
-   user: User | null;
-   isAuthenticated: boolean;
-   login: (params: LoginParams) => Promise<User | undefined>;
-   signup: (params: SignUpParams) => Promise<User | undefined>;
-   logout: () => void;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (params: LoginParams) => Promise<User | undefined>;
+  signup: (params: SignUpParams) => Promise<User | undefined>;
+  logout: () => void;
+  updateOnboardingStatus: (completed: boolean) => void;
+  checkAuth: () => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContext | undefined>(undefined);
 
 export default function AuthProvider({ children }: PropsWithChildren) {
-   const [user, setUser] = useState<User | null>(null);
-   const isAuthenticated = !!user;
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const isAuthenticated = !!user;
 
-   useLayoutEffect(() => {
-      const tokens = api.getTokens();
+  useLayoutEffect(() => {
+    checkAuth().finally(() => setIsLoading(false));
+  }, []);
 
-      if (tokens?.accessToken) {
-         api.request<User>("GET", "/auth/me").then((res) => {
-            if (res.success && res.data) {
-               setUser(res.data);
-            } else {
-               logout();
-            }
-         });
+  const checkAuth = async (): Promise<boolean> => {
+    const tokens = api.getTokens();
+
+    if (!tokens?.accessToken) {
+      return false;
+    }
+
+    try {
+      const response = await api.request<User>("GET", "/auth/me");
+
+      if (response.success && response.data) {
+        setUser(response.data);
+
+        const normalizedEmail = response.data.email.toLowerCase();
+        const userOnboardingKey = `onboarding_${normalizedEmail}`;
+        const storedOnboardingStatus = localStorage.getItem(userOnboardingKey);
+
+        if (storedOnboardingStatus === null) {
+          const generalStatus = localStorage.getItem("onboarding_completed") || "false";
+          localStorage.setItem(userOnboardingKey, generalStatus);
+        } else {
+          localStorage.setItem("onboarding_completed", storedOnboardingStatus);
+        }
+
+        return true;
+      } else {
+        logout();
+        return false;
       }
-   }, []);
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      logout();
+      return false;
+    }
+  };
 
-   async function login({
-      email,
-      password,
-   }: {
-      email: string;
-      password: string;
-   }) {
-      const response = await api.request<LoginResponse>(
-         "POST",
-         "/auth/login",
-         { email, password },
-         false
-      );
-      
-      console.log(response);
+  async function login({ email, password }: LoginParams) {
+    try {
+      const response = await api.request<LoginResponse>("POST", "/auth/login", { email, password }, false);
 
-      if (response.success) {
-         api.setTokens({
-            accessToken: response.data?.tokens.accessToken ?? "",
-            refreshToken: response.data?.tokens.refreshToken ?? "",
-         });
+      if (response.success && response.data) {
+        api.setTokens({
+          accessToken: response.data.tokens.accessToken,
+          refreshToken: response.data.tokens.refreshToken,
+        });
 
-         if (response.data?.user) {
-            setUser(response.data.user);
-            return response.data.user;
-         }
+        const normalizedEmail = email.toLowerCase();
+        const userOnboardingKey = `onboarding_${normalizedEmail}`;
+        const userOnboardingDataKey = `onboarding_data_${normalizedEmail}`;
+        const previouslyCompleted = localStorage.getItem(userOnboardingKey) === "true";
 
-         const me = await api.request<User>("GET", "/auth/me");
-         if (me.success && me.data) {
-            setUser(me.data);
-            return me.data;
-         }
+        // Restore onboarding data if it exists
+        const savedOnboardingData = localStorage.getItem(userOnboardingDataKey);
+        if (savedOnboardingData) {
+          localStorage.setItem("onboard:v1", savedOnboardingData);
+        }
+
+        const meResponse = await api.request<User>("GET", "/auth/me");
+        if (meResponse.success && meResponse.data) {
+          const userData = {
+            ...meResponse.data,
+            hasCompletedOnboarding: previouslyCompleted,
+          };
+          setUser(userData);
+
+          localStorage.setItem("onboarding_completed", previouslyCompleted ? "true" : "false");
+          localStorage.setItem(userOnboardingKey, previouslyCompleted ? "true" : "false");
+
+          return userData;
+        }
+
+        if (response.data.user) {
+          const userData = {
+            ...response.data.user,
+            hasCompletedOnboarding: previouslyCompleted,
+          };
+          setUser(userData);
+          localStorage.setItem("onboarding_completed", previouslyCompleted ? "true" : "false");
+          localStorage.setItem(userOnboardingKey, previouslyCompleted ? "true" : "false");
+          return userData;
+        }
       }
 
       throw new Error(response.error ?? response.message ?? "Login failed");
-   }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  }
 
-   async function signup({
-      fullName,
-      email,
-      password,
-   }: {
-      fullName: string;
-      email: string;
-      password: string;
-   }) {
+  async function signup({ fullName, email, password }: SignUpParams) {
+    try {
       const response = await api.request<SignUpResponse>(
-         "POST",
-         "/auth/register",
-         { username: fullName, email, password },
-         false
+        "POST",
+        "/auth/register",
+        {
+          username: fullName,
+          email,
+          password,
+        },
+        false
       );
 
-      console.log(response);
       if (response.success && response.data) {
-         const { tokens, user,  } = response.data;
+        const { tokens, user } = response.data;
 
-         api.setTokens({
-            accessToken: tokens.accessToken ?? "",
-            refreshToken: tokens.refreshToken ?? "",
-         });
+        api.setTokens({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        });
 
-         if (user) {
-            setUser(user);
-            return user;
-         }
+        const userWithOnboardingStatus = user
+          ? {
+              ...user,
+              hasCompletedOnboarding: false,
+            }
+          : null;
 
-         const me = await api.request<User>("GET", "/auth/me");
-         if (me.success && me.data) {
-            setUser(me.data);
-            return me.data;
-         }
+        if (userWithOnboardingStatus) {
+          setUser(userWithOnboardingStatus);
+          localStorage.setItem("onboarding_completed", "false");
+          const userOnboardingKey = `onboarding_${email.toLowerCase()}`;
+          localStorage.setItem(userOnboardingKey, "false");
+          return userWithOnboardingStatus;
+        }
+
+        const meResponse = await api.request<User>("GET", "/auth/me");
+        if (meResponse.success && meResponse.data) {
+          const userData = { ...meResponse.data, hasCompletedOnboarding: false };
+          setUser(userData);
+          localStorage.setItem("onboarding_completed", "false");
+          const userOnboardingKey = `onboarding_${email.toLowerCase()}`;
+          localStorage.setItem(userOnboardingKey, "false");
+          return userData;
+        }
       }
 
       throw new Error(response.error ?? response.message ?? "Registration failed");
-   }
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
+  }
 
-   function logout() {
-      api.clearTokens();
-      setUser(null);
-   }
+  function logout() {
+    const currentUserEmail = user?.email?.toLowerCase();
+    const onboardingCompleted = localStorage.getItem("onboarding_completed");
+    const onboardingData = localStorage.getItem("onboard:v1"); // Get onboarding data
 
-   return (
-      <AuthContext.Provider
-         value={{ user, isAuthenticated, login, signup, logout }}
-      >
-         {children}
-      </AuthContext.Provider>
-   );
+    if (currentUserEmail && onboardingCompleted) {
+      const userOnboardingKey = `onboarding_${currentUserEmail}`;
+      localStorage.setItem(userOnboardingKey, onboardingCompleted);
+
+      // Also save onboarding data under user-specific key
+      if (onboardingData) {
+        const userOnboardingDataKey = `onboarding_data_${currentUserEmail}`;
+        localStorage.setItem(userOnboardingDataKey, onboardingData);
+      }
+    }
+
+    api.clearTokens();
+    setUser(null);
+    localStorage.removeItem("onboarding_completed");
+    window.location.href = "/auth/sign-in";
+  }
+
+  function updateOnboardingStatus(completed: boolean) {
+    if (user && user.email) {
+      const updatedUser = { ...user, hasCompletedOnboarding: completed };
+      setUser(updatedUser);
+
+      const normalizedEmail = user.email.toLowerCase();
+      localStorage.setItem("onboarding_completed", completed.toString());
+      const userOnboardingKey = `onboarding_${normalizedEmail}`;
+      localStorage.setItem(userOnboardingKey, completed.toString());
+
+      // Also save current onboarding data
+      const onboardingData = localStorage.getItem("onboard:v1");
+      if (onboardingData) {
+        const userOnboardingDataKey = `onboarding_data_${normalizedEmail}`;
+        localStorage.setItem(userOnboardingDataKey, onboardingData);
+      }
+    }
+  }
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        signup,
+        logout,
+        updateOnboardingStatus,
+        checkAuth,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
