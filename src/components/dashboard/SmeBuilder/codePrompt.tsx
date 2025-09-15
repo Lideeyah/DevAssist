@@ -845,7 +845,7 @@ export default function CodePrompt() {
                       onChange={(e) => setPrompt(e.target.value)}
                       onKeyDown={handleKeyPress}
                       disabled={!canRequest || isGenerating || !isAuthenticated}
-                      className="w-full rounded-sm p-2 text-sm font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+                      className="w-full rounded-sm p-2 text-sm overflow-auto font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
                       placeholder={
                         !isAuthenticated
                           ? "Please login to use AI features"
