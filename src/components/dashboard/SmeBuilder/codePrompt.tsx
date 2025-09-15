@@ -868,7 +868,7 @@ export default function CodePrompt() {
                         )}
                       </Button>
                     </div>
-                    <div className="absolute bottom-3 left-2 flex items-center gap-2">
+                    <div className="absolute bottom-1 left-2 flex items-center">
                       <Link size={20} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
                       <SpitchSpeechToText
                         onTranscript={handleTranscript}
