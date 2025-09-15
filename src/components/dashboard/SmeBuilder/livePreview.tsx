@@ -102,12 +102,12 @@ export default function LivePreview({ files, mainFile, deviceSize }: LivePreview
   }
 
   return (
-    <div className="h-full bg-neutral-800">
-      <div className={getDeviceClass()} style={{ width: getDeviceWidth(), height: "100%" }}>
+    <div className="h-full bg-neutral-800 scrollbarwidth">
+      <div className={`${getDeviceClass()} scrollbarwidth`} style={{ width: getDeviceWidth(), height: "100%" }}>
         <iframe
           srcDoc={iframeContent}
           title="Live Preview"
-          className="w-full h-full border-none bg-white"
+          className="w-full h-full border scrollbarwidt bg-white"
           sandbox="allow-same-origin allow-scripts"
           loading="lazy"
         />

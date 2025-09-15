@@ -1,5 +1,4 @@
 // import { useState, useEffect } from "react";
-// import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 // import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2, User, Code, Monitor, FolderOpen } from "lucide-react";
 // import SplitPane from "react-split-pane";
 // import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@
 // import { OnboardState } from "@/types/onboarding";
 // import { useAuth } from "@/hooks/use-auth";
 // import { useNavigate } from "react-router";
+// import SpitchSpeechToText from "./SpeachToText/spitchSpeechToText";
 
 // interface PromptHistory {
 //   prompt: string;
@@ -34,6 +34,8 @@
 //   const [currentFile, setCurrentFile] = useState<string>("");
 //   const [mainFile, setMainFile] = useState<string>("index.html");
 //   const [promptHistory, setPromptHistory] = useState<PromptHistory[]>([]);
+//   const [listening, setListening] = useState(false);
+//   const [transcript, setTranscript] = useState("");
 
 //   // ============ AUTH & NAVIGATION HOOKS ============
 //   const { user, isAuthenticated, logout, isLoading: authLoading } = useAuth();
@@ -41,9 +43,6 @@
 
 //   // ============ PROJECT HOOKS ============
 //   const { currentProject, files, generateProjectFromPrompt, setFiles } = useProjectManager();
-
-//   // ============ SPEECH RECOGNITION HOOKS ============
-//   const { transcript, listening, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition();
 
 //   // ============ ONBOARDING DATA ============
 //   const onboardingData: OnboardState = JSON.parse(localStorage.getItem("onboard:v1") ?? "{}");
@@ -74,10 +73,22 @@
 
 //   const handleSpeechClick = () => {
 //     if (listening) {
-//       SpeechRecognition.stopListening();
+//       setListening(false);
 //     } else {
-//       resetTranscript();
-//       SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+//       setTranscript(""); // Clear previous transcript
+//       setListening(true);
+//     }
+//   };
+
+//   const handleTranscript = (newTranscript: string) => {
+//     if (newTranscript.trim() === "") {
+//       // Reset transcript and prompt when empty string is received
+//       setTranscript("");
+//       setPrompt("");
+//     } else {
+//       // Append new transcript text
+//       setTranscript((prev) => prev + " " + newTranscript);
+//       setPrompt((prev) => prev + " " + newTranscript);
 //     }
 //   };
 
@@ -229,10 +240,15 @@
 //   const usagePercentage = (tokenUsage.used / tokenUsage.limit) * 100;
 //   const isLowOnTokens = usagePercentage > 80;
 
+//   // Check if browser supports media recording
+//   const browserSupportsRecording = () => {
+//     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+//   };
+
 //   // ============ RENDER GUARDS ============
 
-//   if (!browserSupportsSpeechRecognition) {
-//     return <span>Browser does not support speech recognition.</span>;
+//   if (!browserSupportsRecording()) {
+//     return <span>Browser does not support audio recording.</span>;
 //   }
 
 //   if (authLoading) {
@@ -341,7 +357,7 @@
 //                       onChange={(e) => setPrompt(e.target.value)}
 //                       onKeyDown={handleKeyPress}
 //                       disabled={!canRequest || isGenerating || !isAuthenticated}
-//                       className="w-full rounded-sm p-2 text-sm font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+//                       className="w-full rounded-sm p-2 text-sm overflow-auto font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
 //                       placeholder={
 //                         !isAuthenticated
 //                           ? "Please login to use AI features"
@@ -364,14 +380,12 @@
 //                         )}
 //                       </Button>
 //                     </div>
-//                     <div className="absolute bottom-3 left-2 flex items-center gap-2">
+//                     <div className="absolute bottom-1 left-2 flex items-center">
 //                       <Link size={20} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
-//                       <Mic
-//                         onClick={handleSpeechClick}
-//                         size={20}
-//                         className={`cursor-pointer transition-colors ${
-//                           listening ? "text-green-600 animate-pulse-scale" : "text-neutral-400 hover:text-blue-500"
-//                         }`}
+//                       <SpitchSpeechToText
+//                         onTranscript={handleTranscript}
+//                         language="en" // Set to the language you're speaking
+//                         autoTranslate={true} // Enable translation to English
 //                       />
 //                     </div>
 //                   </div>
@@ -487,7 +501,20 @@
 // }
 
 import { useState, useEffect } from "react";
-import { GitMerge, Link, Mic, MonitorSmartphone, Scaling, SendHorizonal, Undo2, User, Code, Monitor, FolderOpen } from "lucide-react";
+import {
+  GitMerge,
+  Link,
+  MonitorSmartphone,
+  Scaling,
+  SendHorizonal,
+  Undo2,
+  User,
+  Code,
+  Monitor,
+  FolderOpen,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import SplitPane from "react-split-pane";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -761,7 +788,7 @@ export default function CodePrompt() {
 
   // ============ MAIN RENDER ============
   return (
-    <div className="max-h-full h-[calc(100vh-75px)] w-full flex overflow-hidden">
+    <div className="max-h-full h-[calc(100vh-75px)] w-full flex !overflow-hidden">
       {activeTab === "preview" ? (
         <SplitPane
           split="vertical"
@@ -770,14 +797,14 @@ export default function CodePrompt() {
           size={splitSize}
           defaultSize={35}
           onChange={handleSplitChange}
-          className="!overflow-visible"
+          className="!overflow-visible  scrollbarwidth"
         >
           {/* Left - Code Prompt */}
           {!isFullScreen ? (
-            <div className="flex flex-col w-full justify-end max-h-full h-[calc(100vh-78px)] px-4 py-2">
-              <div className="overflow-auto flex flex-col justify-between h-full">
-                {/* User Info & Token Usage */}
-                <div className="">
+            <div className="flex flex-col w-full justify-end max-h-full h-[calc(100vh-76px)]">
+              <div className="flex flex-col h-full">
+                {/* User Info & Token Usage - Fixed at top */}
+                <div className="p-4 pb-0">
                   <div className="mb-4 top-0 p-3 bg-neutral-800 rounded-sm border border-neutral-700">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center justify-between w-full">
@@ -807,45 +834,62 @@ export default function CodePrompt() {
                     </div>
                     {!canRequest && <div className="text-xs text-red-400 mt-2">Daily limit reached</div>}
                   </div>
-
-                  {/* Prompt History Display */}
-                  <div className="flex-1 overflow-y-auto mb-4">
-                    {promptHistory.map((item, index) => (
-                      <div key={index} className="mb-4">
-                        {/* Prompt Display */}
-                        <div className="border rounded-sm mb-2 border-neutral-700">
-                          <div className="bg-neutral-900 w-full min-h-[60px] p-3 text-sm">
-                            <div className="text-neutral-200 whitespace-pre-wrap">{item.prompt}</div>
-                          </div>
-                        </div>
-
-                        {/* AI Response Display */}
-                        <div className="border rounded-sm mb-4 border-neutral-700">
-                          <div className="bg-neutral-900 w-full min-h-[80px] p-3 text-sm">
-                            {item.response.includes("🔄") ? (
-                              <div className="flex items-center text-blue-400">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-                                {item.response}
-                              </div>
-                            ) : (
-                              <div className="text-neutral-200 whitespace-pre-wrap">{item.response}</div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
-                {/* Input Area */}
-                <div className="flex justify-end">
-                  <div className="w-full relative group">
+                {/* Prompt History Display - Scrollable area */}
+                <div className="flex-1 overflow-y-auto scrollbarwidth px-4">
+                  {promptHistory.map((item, index) => (
+                    <div key={index} className="mb-4">
+                      {/* Prompt Display */}
+                      <div className="border rounded-sm mb-2 border-neutral-700">
+                        <div className="bg-neutral-900 w-full min-h-[60px] p-3 text-sm">
+                          <div className="text-neutral-200 whitespace-pre-wrap">{item.prompt}</div>
+                        </div>
+                      </div>
+
+                      {/* AI Response Display - ENHANCED UX */}
+                      <div className="border rounded-sm mb-4 border-neutral-700">
+                        <div className="bg-neutral-900 w-full min-h-[80px] p-3 text-sm">
+                          {item.response.includes("🔄") ? (
+                            <div className="flex flex-col items-center justify-center py-3">
+                              <div className="flex items-center justify-center mb-2">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 border-r-2 border-transparent"></div>
+                              </div>
+                              <div className="text-blue-400 text-sm font-medium">Crafting your landing page...</div>
+                              <div className="text-neutral-500 text-xs mt-1">This may take a few moments</div>
+                            </div>
+                          ) : item.response.includes("❌") ? (
+                            <div className="flex items-start text-red-400">
+                              <div className="flex-shrink-0 mt-0.5">
+                                <AlertCircle size={16} className="mr-2" />
+                              </div>
+                              <div className="text-neutral-200 whitespace-pre-wrap">{item.response.replace("❌ ", "")}</div>
+                            </div>
+                          ) : item.response.includes("✅") ? (
+                            <div className="flex items-start text-green-400">
+                              <div className="flex-shrink-0 mt-0.5">
+                                <CheckCircle size={16} className="mr-2" />
+                              </div>
+                              <div className="text-neutral-200 whitespace-pre-wrap">{item.response.replace("✅ ", "")}</div>
+                            </div>
+                          ) : (
+                            <div className="text-neutral-200 whitespace-pre-wrap">{item.response}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Input Area - Fixed at bottom */}
+                <div className="p-4 pt-0">
+                  <div className="w-full relative group flex flex-col border-neutral-600 border bg-neutral-900 rounded-sm ">
                     <textarea
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       onKeyDown={handleKeyPress}
                       disabled={!canRequest || isGenerating || !isAuthenticated}
-                      className="w-full rounded-sm p-2 text-sm overflow-auto font-medium placeholder:text-neutral-500 h-[9rem] transition-all duration-200 focus:border-blue-500 border-neutral-600 border bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+                      className="w-full pl-2 pt-1 scrollbarwidth text-sm overflow-y-scroll !border-none rounded-t-sm font-medium placeholder:text-neutral-500 h-[8rem] transition-all duration-200 bg-neutral-900 group disabled:opacity-50 disabled:cursor-not-allowed resize-none"
                       placeholder={
                         !isAuthenticated
                           ? "Please login to use AI features"
@@ -854,27 +898,32 @@ export default function CodePrompt() {
                           : "Describe your landing page (e.g., 'Create a modern landing page for a tech startup')"
                       }
                     />
-                    <div className="absolute bottom-3 right-3">
-                      <Button
-                        onClick={handleSendPrompt}
-                        disabled={!prompt.trim() || !canRequest || isGenerating || !isAuthenticated}
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 disabled:text-neutral-400"
-                      >
-                        {isGenerating ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        ) : (
-                          <SendHorizonal size={16} />
-                        )}
-                      </Button>
-                    </div>
-                    <div className="absolute bottom-1 left-2 flex items-center">
-                      <Link size={20} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
-                      <SpitchSpeechToText
-                        onTranscript={handleTranscript}
-                        language="en" // Set to the language you're speaking
-                        autoTranslate={true} // Enable translation to English
-                      />
+                    <div className="flex items-center border-none border-gray-700 p-2  justify-between flex-nowrap">
+                      <div className="flex items-center gap-2">
+                        <Link size={20} className="cursor-pointer text-neutral-400 hover:text-blue-500 transition-colors" />
+                        <SpitchSpeechToText
+                          onTranscript={handleTranscript}
+                          language="en" // Set to the language you're speaking
+                          autoTranslate={true} // Enable translation to English
+                        />
+                      </div>
+                      <div className="">
+                        <Button
+                          onClick={handleSendPrompt}
+                          disabled={!prompt.trim() || !canRequest || isGenerating || !isAuthenticated}
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 disabled:text-neutral-400 transition-all duration-200"
+                        >
+                          {isGenerating ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              <span className="text-xs">Generating...</span>
+                            </div>
+                          ) : (
+                            <SendHorizonal size={16} />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
