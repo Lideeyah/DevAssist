@@ -9,7 +9,7 @@ const router = express.Router();
 const upload = multer(); // for handling audio uploads
 
 // Base URL of your FastAPI backend
-const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:7860";
+const FASTAPI_URL = process.env.FASTAPI_URL || "https://lydiasolomon-devassist.hf.space/";
 
 /**
  * Health check – hits FastAPI root
