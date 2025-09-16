@@ -1,68 +1,57 @@
-import express from 'express';
-import ProjectController from '../controllers/projectController.js';
-import { authenticate, optionalAuth } from '../middleware/auth.js';
-import { projectLimiter, searchLimiter } from '../middleware/rateLimiter.js';
+// backend/src/routes/projects.js
+import express from "express";
+import ProjectController from "../controllers/projectController.js";
+import { authenticate, optionalAuth } from "../middleware/auth.js";
+import { projectLimiter, searchLimiter } from "../middleware/rateLimiter.js";
 import {
   validateProject,
   validateObjectId,
   validatePagination,
-  validateSearch
-} from '../utils/validation.js';
+  validateSearch,
+} from "../utils/validation.js";
 
 const router = express.Router();
 
 /**
  * Project Routes
+ * Base path: /api/projects
  */
 
-// Public routes
-router.get('/public', 
+// Public projects
+router.get(
+  "/public",
   optionalAuth,
   validatePagination,
   validateSearch,
   ProjectController.getPublicProjects
 );
 
-// Protected routes (require authentication)
+// Auth required
 router.use(authenticate);
 
-// Project CRUD operations
-router.post('/', 
-  projectLimiter,
-  validateProject, 
-  ProjectController.createProject
-);
+// CRUD
+router.post("/", projectLimiter, validateProject, ProjectController.createProject);
 
-router.get('/', 
-  validatePagination,
-  validateSearch,
-  ProjectController.getUserProjects
-);
+router.get("/", validatePagination, validateSearch, ProjectController.getUserProjects);
 
-router.get('/stats', 
-  ProjectController.getUserProjectStats
-);
+router.get("/stats", ProjectController.getUserProjectStats);
 
-router.get('/search', 
+router.get(
+  "/search",
   searchLimiter,
   validateSearch,
   ProjectController.searchProjects
 );
 
-router.get('/:id', 
-  validateObjectId('id'),
-  ProjectController.getProjectById
-);
+router.get("/:id", validateObjectId("id"), ProjectController.getProjectById);
 
-router.put('/:id', 
-  validateObjectId('id'),
+router.put(
+  "/:id",
+  validateObjectId("id"),
   validateProject,
   ProjectController.updateProject
 );
 
-router.delete('/:id', 
-  validateObjectId('id'),
-  ProjectController.deleteProject
-);
+router.delete("/:id", validateObjectId("id"), ProjectController.deleteProject);
 
 export default router;
