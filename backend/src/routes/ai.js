@@ -1,98 +1,103 @@
+// backend/src/routes/ai.js
 import express from "express";
-import AIController from "../controllers/aiController.js";
+import fetch from "node-fetch";
+import FormData from "form-data";
+import multer from "multer";
 import { authenticate } from "../middleware/auth.js";
-import { aiLimiter } from "../middleware/rateLimiter.js";
-import {
-  checkTokenLimits,
-  addTokenUsageHeaders,
-} from "../middleware/tokenLimits.js";
-import {
-  validateAIInteraction,
-  validateObjectId,
-  validatePagination,
-} from "../utils/validation.js";
-import { query } from "express-validator";
 
 const router = express.Router();
+const upload = multer(); // for handling audio uploads
+
+// Base URL of your FastAPI backend
+const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
 /**
- * AI Routes
- * All routes require authentication
+ * Health check – hits FastAPI root
  */
+router.get("/health", async (req, res) => {
+  try {
+    const response = await fetch(`${FASTAPI_URL}/`);
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Health check failed:", err.message);
+    res.status(500).json({ error: "FastAPI not reachable" });
+  }
+});
 
-// Health check (public)
-router.get("/health", AIController.healthCheck);
-
-// Protected routes
+// All routes below require authentication
 router.use(authenticate);
 
-// Generate AI response
-router.post(
-  "/generate",
-  aiLimiter,
-  checkTokenLimits,
-  validateAIInteraction,
-  AIController.generateResponse
-);
+/**
+ * Chat endpoint → forwards to FastAPI /chat
+ */
+router.post("/chat", async (req, res) => {
+  try {
+    const response = await fetch(`${FASTAPI_URL}/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": req.headers.authorization || "",
+      },
+      body: JSON.stringify(req.body),
+    });
 
-// Get user interaction history
-router.get(
-  "/history",
-  validatePagination,
-  query("projectId")
-    .optional()
-    .isMongoId()
-    .withMessage("Invalid project ID format"),
-  query("mode")
-    .optional()
-    .isIn(["explain", "generate"])
-    .withMessage("Mode must be either explain or generate"),
-  query("days")
-    .optional()
-    .isInt({ min: 1, max: 365 })
-    .withMessage("Days must be between 1 and 365"),
-  AIController.getUserHistory
-);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error("❌ Chat error:", err.message);
+    res.status(500).json({ error: "Chat request failed" });
+  }
+});
 
-// Get user AI usage statistics
-router.get(
-  "/stats",
-  query("days")
-    .optional()
-    .isInt({ min: 1, max: 365 })
-    .withMessage("Days must be between 1 and 365"),
-  AIController.getUserStats
-);
+/**
+ * STT endpoint → forwards audio file to FastAPI /stt
+ */
+router.post("/stt", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No audio file uploaded" });
+    }
 
-// Get user token usage and limits
-router.get("/token-usage", addTokenUsageHeaders, AIController.getTokenUsage);
+    const formData = new FormData();
+    formData.append("file", req.file.buffer, req.file.originalname);
 
-// Check if user can make AI request
-router.get("/can-request", addTokenUsageHeaders, AIController.canMakeRequest);
+    const response = await fetch(`${FASTAPI_URL}/stt`, {
+      method: "POST",
+      headers: {
+        "Authorization": req.headers.authorization || "",
+      },
+      body: formData,
+    });
 
-// Get specific interaction by ID
-router.get(
-  "/interactions/:id",
-  validateObjectId("id"),
-  AIController.getInteraction
-);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error("❌ STT error:", err.message);
+    res.status(500).json({ error: "STT request failed" });
+  }
+});
 
-// Delete interaction
-router.delete(
-  "/interactions/:id",
-  validateObjectId("id"),
-  AIController.deleteInteraction
-);
+/**
+ * Autodoc endpoint → forwards to FastAPI /autodoc
+ */
+router.post("/autodoc", async (req, res) => {
+  try {
+    const response = await fetch(`${FASTAPI_URL}/autodoc`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": req.headers.authorization || "",
+      },
+      body: JSON.stringify(req.body),
+    });
 
-// Get project interaction history
-router.get(
-  "/projects/:projectId/history",
-  validateObjectId("projectId"),
-  query("limit")
-    .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage("Limit must be between 1 and 100"),
-  AIController.getProjectHistory
-);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error("❌ Autodoc error:", err.message);
+    res.status(500).json({ error: "Autodoc request failed" });
+  }
+});
 
 export default router;
