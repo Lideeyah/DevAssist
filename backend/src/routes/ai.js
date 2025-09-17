@@ -9,9 +9,8 @@ import { authenticate } from "../middleware/auth.js";
 dotenv.config();
 
 const router = express.Router();
-const upload = multer(); // for handling audio uploads
+const upload = multer();
 
-// Base URL of your FastAPI backend
 const FASTAPI_URL = process.env.FASTAPI_URL || "https://lydiasolomon-devassist.hf.space";
 const PROJECT_API_KEY = process.env.PROJECT_API_KEY;
 
@@ -27,13 +26,12 @@ router.get("/health", async (req, res) => {
   }
 });
 
-// All routes below require authentication
+// Require auth below this line
 router.use(authenticate);
 
 // -------- Chat endpoint --------
 router.post("/chat", async (req, res) => {
   try {
-    // Normalize payload: support multiple possible input keys
     const payload = {
       question: req.body.question ?? req.body.message ?? req.body.prompt ?? req.body.text ?? ""
     };
@@ -60,11 +58,7 @@ router.post("/stt", upload.single("file"), async (req, res) => {
   try {
     const formData = new FormData();
     formData.append("file", req.file.buffer, req.file.originalname);
-
-    // optional: pass along lang_hint if frontend provides it
-    if (req.body.lang_hint) {
-      formData.append("lang_hint", req.body.lang_hint);
-    }
+    if (req.body.lang_hint) formData.append("lang_hint", req.body.lang_hint);
 
     const response = await fetch(`${FASTAPI_URL}/stt`, {
       method: "POST",
