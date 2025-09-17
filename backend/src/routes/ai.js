@@ -3,17 +3,19 @@ import express from "express";
 import fetch from "node-fetch";
 import FormData from "form-data";
 import multer from "multer";
+import dotenv from "dotenv";
 import { authenticate } from "../middleware/auth.js";
+
+dotenv.config();
 
 const router = express.Router();
 const upload = multer(); // for handling audio uploads
 
 // Base URL of your FastAPI backend
-const FASTAPI_URL = process.env.FASTAPI_URL || "https://lydiasolomon-devassist.hf.space/";
+const FASTAPI_URL = process.env.FASTAPI_URL || "https://lydiasolomon-devassist.hf.space";
+const PROJECT_API_KEY = process.env.PROJECT_API_KEY;
 
-/**
- * Health check – hits FastAPI root
- */
+// -------- Health check --------
 router.get("/health", async (req, res) => {
   try {
     const response = await fetch(`${FASTAPI_URL}/`);
@@ -28,16 +30,14 @@ router.get("/health", async (req, res) => {
 // All routes below require authentication
 router.use(authenticate);
 
-/**
- * Chat endpoint → forwards to FastAPI /chat
- */
+// -------- Chat endpoint --------
 router.post("/chat", async (req, res) => {
   try {
     const response = await fetch(`${FASTAPI_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": req.headers.authorization || "",
+        "Authorization": `Bearer ${PROJECT_API_KEY}`,
       },
       body: JSON.stringify(req.body),
     });
@@ -50,9 +50,7 @@ router.post("/chat", async (req, res) => {
   }
 });
 
-/**
- * STT endpoint → forwards audio file to FastAPI /stt
- */
+// -------- STT endpoint --------
 router.post("/stt", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -65,7 +63,7 @@ router.post("/stt", upload.single("file"), async (req, res) => {
     const response = await fetch(`${FASTAPI_URL}/stt`, {
       method: "POST",
       headers: {
-        "Authorization": req.headers.authorization || "",
+        "Authorization": `Bearer ${PROJECT_API_KEY}`,
       },
       body: formData,
     });
@@ -78,16 +76,14 @@ router.post("/stt", upload.single("file"), async (req, res) => {
   }
 });
 
-/**
- * Autodoc endpoint → forwards to FastAPI /autodoc
- */
+// -------- Autodoc endpoint --------
 router.post("/autodoc", async (req, res) => {
   try {
     const response = await fetch(`${FASTAPI_URL}/autodoc`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": req.headers.authorization || "",
+        "Authorization": `Bearer ${PROJECT_API_KEY}`,
       },
       body: JSON.stringify(req.body),
     });
