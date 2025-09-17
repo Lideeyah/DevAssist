@@ -33,32 +33,38 @@ router.use(authenticate);
 // -------- Chat endpoint --------
 router.post("/chat", async (req, res) => {
   try {
+    // Normalize payload: support multiple possible input keys
+    const payload = {
+      question: req.body.question ?? req.body.message ?? req.body.prompt ?? req.body.text ?? ""
+    };
+
     const response = await fetch(`${FASTAPI_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${PROJECT_API_KEY}`,
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
-    res.status(response.status).json(data);
+    res.json(data);
   } catch (err) {
-    console.error("❌ Chat error:", err.message);
-    res.status(500).json({ error: "Chat request failed" });
+    console.error("Error in /chat proxy:", err);
+    res.status(500).json({ error: "Chat proxy failed" });
   }
 });
 
 // -------- STT endpoint --------
 router.post("/stt", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No audio file uploaded" });
-    }
-
     const formData = new FormData();
     formData.append("file", req.file.buffer, req.file.originalname);
+
+    // optional: pass along lang_hint if frontend provides it
+    if (req.body.lang_hint) {
+      formData.append("lang_hint", req.body.lang_hint);
+    }
 
     const response = await fetch(`${FASTAPI_URL}/stt`, {
       method: "POST",
@@ -69,10 +75,10 @@ router.post("/stt", upload.single("file"), async (req, res) => {
     });
 
     const data = await response.json();
-    res.status(response.status).json(data);
+    res.json(data);
   } catch (err) {
-    console.error("❌ STT error:", err.message);
-    res.status(500).json({ error: "STT request failed" });
+    console.error("Error in /stt proxy:", err);
+    res.status(500).json({ error: "STT proxy failed" });
   }
 });
 
@@ -93,6 +99,26 @@ router.post("/autodoc", async (req, res) => {
   } catch (err) {
     console.error("❌ Autodoc error:", err.message);
     res.status(500).json({ error: "Autodoc request failed" });
+  }
+});
+
+// -------- SME Generate endpoint --------
+router.post("/sme/generate", async (req, res) => {
+  try {
+    const response = await fetch(`${FASTAPI_URL}/sme/generate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${PROJECT_API_KEY}`,
+      },
+      body: JSON.stringify(req.body),
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ SME generate error:", err);
+    res.status(500).json({ error: "Failed to generate SME site" });
   }
 });
 
