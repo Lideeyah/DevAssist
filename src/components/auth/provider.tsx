@@ -127,11 +127,23 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
   async function signup({ fullName, email, password }: SignUpParams) {
     try {
+      // Split the full name into first and last name
+      const nameParts = fullName.trim().split(/\s+/);
+      const Fname = nameParts[0] || "";
+      const Lname = nameParts.slice(1).join(" ") || "";
+
+      // Use just the first name as username, add random numbers if needed
+      let username = Fname;
+
+      // Add 1-3 random digits to increase uniqueness
+      const randomDigits = Math.floor(100 + Math.random() * 900); // Generates 100-999
+      username = `${username}${randomDigits}`;
+
       const response = await api.request<SignUpResponse>(
         "POST",
         "/auth/register",
         {
-          username: fullName,
+          username: username,
           email,
           password,
         },

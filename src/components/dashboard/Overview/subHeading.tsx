@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { OnboardState } from "@/types/onboarding";
 import { Plus, Store } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 export default function SubHeading(): JSX.Element {
   const { user } = useAuth();
@@ -46,10 +47,12 @@ export default function SubHeading(): JSX.Element {
       </div>
 
       <div className="">
-        <Button variant="default">
-          <Plus size={16} />
-          Create New Project
-        </Button>
+        <Link to="/dashboard/sme">
+          <Button variant="default">
+            <Plus size={16} />
+            Create New Project
+          </Button>
+        </Link>
       </div>
     </div>
   );
