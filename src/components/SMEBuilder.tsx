@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Code, Layout, Upload } from "lucide-react";
 
 interface SiteData {
@@ -97,12 +97,7 @@ export default function SMEBuilder() {
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Layout className="w-6 h-6" /> SME Builder
           </h2>
-          <Input
-            placeholder="Describe your business website..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={isGenerating}
-          />
+          <Input placeholder="Describe your business website..." value={prompt} onChange={(e) => setPrompt(e.target.value)} disabled={isGenerating} />
           <Button onClick={handleGenerateFromPrompt} disabled={isGenerating}>
             {isGenerating ? <Loader2 className="animate-spin" /> : <Upload className="w-4 h-4" />}
             {isGenerating ? "Generating..." : "Generate Site"}

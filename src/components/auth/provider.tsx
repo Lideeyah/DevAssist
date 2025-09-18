@@ -231,6 +231,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       }
     }
   }
+
   return (
     <AuthContext.Provider
       value={{

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { BsRobot } from "react-icons/bs";
 import { SendHorizonal } from "lucide-react";
+import SpitchSpeechToText from "../SmeBuilder/SpeachToText/spitchSpeechToText";
 
 interface AIAssistantProps {
   isAuthenticated: boolean;
@@ -98,6 +99,14 @@ export default function AIAssistant({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleGenerateSubmit();
+    }
+  };
+
+  const handleTranscript = (newTranscript: string) => {
+    if (newTranscript.trim() === "") {
+      setUserMessage(""); // reset input when empty
+    } else {
+      setUserMessage((prev) => (prev + " " + newTranscript).trim());
     }
   };
 
@@ -218,6 +227,24 @@ export default function AIAssistant({
       </div>
 
       <div className="p-3 border-t border-white">
+        {/* <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder={isAuthenticated ? "Ask AI anything..." : "Please log in to use AI features"}
+            className="w-full border h-10 border-white px-2 py-1 rounded-lg text-sm focus:outline-none focus:border-chart-2"
+            value={userMessage}
+            onChange={(e) => setUserMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={isAiResponding || !isAuthenticated}
+          />
+          <button
+            className="bg-chart-2 h-9 w-10 flex items-center justify-center cursor-pointer hover:bg-chart-2 rounded disabled:bg-gray-600 disabled:cursor-not-allowed"
+            onClick={handleSendMessage}
+            disabled={isAiResponding || !userMessage.trim() || !isAuthenticated}
+          >
+            <SendHorizonal size={14} />
+          </button>
+        </div> */}
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -228,6 +255,10 @@ export default function AIAssistant({
             onKeyPress={handleKeyPress}
             disabled={isAiResponding || !isAuthenticated}
           />
+
+          {/* Speech-to-text mic */}
+          <SpitchSpeechToText onTranscript={handleTranscript} language="en" autoTranslate={true} disabled={isAiResponding || !isAuthenticated} />
+
           <button
             className="bg-chart-2 h-9 w-10 flex items-center justify-center cursor-pointer hover:bg-chart-2 rounded disabled:bg-gray-600 disabled:cursor-not-allowed"
             onClick={handleSendMessage}

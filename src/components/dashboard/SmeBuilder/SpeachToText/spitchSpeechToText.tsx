@@ -855,7 +855,7 @@ const SpitchSpeechToText: React.FC<SpitchSpeechToTextProps> = ({
       <button
         onClick={toggleListening}
         disabled={disabled || isProcessing}
-        className={`transition-colors ${listening ? " text-red-600 animate-pulse" : "hover:text-blue-500"} ${
+        className={`transition-colors ${listening ? " text-red-600 animate-pulse" : ""} ${
           disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
         }`}
         title={listening ? "Stop recording" : "Start recording"}
@@ -865,9 +865,9 @@ const SpitchSpeechToText: React.FC<SpitchSpeechToTextProps> = ({
             <WifiOff size={20} className="text-red-500" />
           </div>
         ) : !isProcessing ? (
-          <Mic size={20} className="text-neutral-400 hover:text-blue-500" />
+          <Mic size={20} className={`text-neutral-400  ${listening ? "text-red-500" : ""}`} />
         ) : (
-          <span className="ml-2 text-sm cursor-not-allowed animate-pulse">Please wait...</span>
+          <span className="ml-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-500 border-t-transparent"></span>
         )}
       </button>
     </div>

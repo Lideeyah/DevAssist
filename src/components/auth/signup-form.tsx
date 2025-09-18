@@ -147,8 +147,8 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<"div">)
               variant="outline"
               size="lg"
               type="button"
-              className="w-full"
-              onClick={async () => await signUpWithGithub()}
+              className="w-full cursor-not-allowed opacity-25"
+              // onClick={async () => await signUpWithGithub()}
               disabled={isSubmitting || isLoading}
             >
               {isLoading ? (

@@ -47,12 +47,21 @@ export default function SubHeading(): JSX.Element {
       </div>
 
       <div className="">
-        <Link to="/dashboard/sme">
-          <Button variant="default">
-            <Plus size={16} />
-            Create New Project
-          </Button>
-        </Link>
+        {selectedPath !== "Your Business" ? (
+          <Link to="/ide">
+            <Button variant="default">
+              <Plus size={16} />
+              Create New Project
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/dashboard/sme">
+            <Button variant="default">
+              <Plus size={16} />
+              Create New Project
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );
