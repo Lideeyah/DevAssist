@@ -69,7 +69,7 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<"div">)
       );
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong!");
+      toast.error(error instanceof Error ? error.message : "Something went wrong!");
     }
   }
 
@@ -106,7 +106,7 @@ export function SignUpForm({ className, ...props }: React.ComponentProps<"div">)
                 <Input
                   id="password"
                   type={isVisible ? "text" : "password"}
-                  placeholder="yourstrongpassword"
+                  placeholder="Enter a strong password"
                   className="h-10"
                   {...register("password")}
                 />
