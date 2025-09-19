@@ -26,14 +26,19 @@ router.get("/health", async (req, res) => {
   }
 });
 
-// Require auth below this line
+// ✅ Require auth below this line
 router.use(authenticate);
 
 // -------- Chat endpoint --------
 router.post("/chat", async (req, res) => {
   try {
     const payload = {
-      question: req.body.question ?? req.body.message ?? req.body.prompt ?? req.body.text ?? ""
+      question:
+        req.body.question ??
+        req.body.message ??
+        req.body.prompt ??
+        req.body.text ??
+        "",
     };
 
     const response = await fetch(`${FASTAPI_URL}/chat`, {
@@ -48,7 +53,7 @@ router.post("/chat", async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    console.error("Error in /chat proxy:", err);
+    console.error("❌ Error in /chat proxy:", err.message);
     res.status(500).json({ error: "Chat proxy failed" });
   }
 });
@@ -71,7 +76,7 @@ router.post("/stt", upload.single("file"), async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    console.error("Error in /stt proxy:", err);
+    console.error("❌ Error in /stt proxy:", err.message);
     res.status(500).json({ error: "STT proxy failed" });
   }
 });
@@ -111,8 +116,31 @@ router.post("/sme/generate", async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    console.error("❌ SME generate error:", err);
+    console.error("❌ SME generate error:", err.message);
     res.status(500).json({ error: "Failed to generate SME site" });
+  }
+});
+
+// -------- SME Speech Generate endpoint --------
+router.post("/sme/speech-generate", upload.single("file"), async (req, res) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", req.file.buffer, req.file.originalname);
+    if (req.body.lang_hint) formData.append("lang_hint", req.body.lang_hint);
+
+    const response = await fetch(`${FASTAPI_URL}/sme/speech-generate`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${PROJECT_API_KEY}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("❌ SME speech-generate error:", err.message);
+    res.status(500).json({ error: "Failed to generate SME site from speech" });
   }
 });
 
