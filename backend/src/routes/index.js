@@ -67,7 +67,14 @@ router.get("/docs", (req, res) => {
         "/projects/:projectId/files",
         "/projects/:projectId/files/:filename",
       ],
-      ai: ["/chat", "/stt", "/autodoc", "/health"],
+      ai: [
+        "/chat",
+        "/stt",
+        "/autodoc",
+        "/sme/generate",
+        "/sme/speech-generate",
+        "/health",
+      ],
     },
   });
 });
