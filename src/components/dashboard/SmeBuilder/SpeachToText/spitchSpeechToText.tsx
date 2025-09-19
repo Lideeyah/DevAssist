@@ -745,13 +745,6 @@ const SpitchSpeechToText: React.FC<SpitchSpeechToTextProps> = ({
       return;
     }
 
-    console.log("[Spitch] API Key:", apiKey ? "Present" : "Missing");
-    console.log("[Spitch] Environment:", import.meta.env);
-
-    if (!apiKey) {
-      throw new Error("API key not configured. Please check your .env file");
-    }
-
     try {
       const resp = await fetch("https://api.spi-tch.com/v1/translate", {
         method: "POST",
