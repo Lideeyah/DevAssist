@@ -1,9 +1,10 @@
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import config from './config/env.js';
 
-// Import middleware
+// Middleware
 import { corsMiddleware } from './middleware/cors.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import {
@@ -13,17 +14,13 @@ import {
   securityHeaders
 } from './middleware/errorHandler.js';
 
-// Import routes
+// Routes
 import apiRoutes from './routes/index.js';
 
 /**
  * Express Application Setup
  */
 const app = express();
-
-/**
- * Trust proxy (important for rate limiting and IP detection)
- */
 app.set('trust proxy', 1);
 
 /**
@@ -33,49 +30,41 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'", "https:"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
+      connectSrc: ["'self'", "https:"], // Needed for AI APIs
+      fontSrc: ["'self'", "https:"],
       objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
+      mediaSrc: ["'self'", "https:"],
       frameSrc: ["'none'"],
     },
   },
   crossOriginEmbedderPolicy: false
 }));
-
 app.use(securityHeaders);
 
 /**
- * CORS Configuration
+ * CORS
  */
 app.use(corsMiddleware);
 
 /**
- * Request Parsing Middleware
+ * Request Parsing
  */
-app.use(express.json({ 
-  limit: '10mb',
-  strict: true
-}));
-
-app.use(express.urlencoded({ 
-  extended: true, 
-  limit: '10mb' 
-}));
+app.use(express.json({ limit: '20mb', strict: true }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 /**
- * Logging Middleware
+ * Logging
  */
-if (config.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-} else {
-  app.use(morgan('combined'));
-}
-
+app.use(config.NODE_ENV === 'development' ? morgan('dev') : morgan('combined'));
 app.use(requestLogger);
+
+/**
+ * Compression
+ */
+app.use(compression());
 
 /**
  * Rate Limiting
@@ -83,7 +72,7 @@ app.use(requestLogger);
 app.use(generalLimiter);
 
 /**
- * Health Check Route (before API routes)
+ * Health Check
  */
 app.get('/', (req, res) => {
   res.json({
@@ -106,7 +95,7 @@ app.get('/', (req, res) => {
 app.use('/api', apiRoutes);
 
 /**
- * Handle 404 - Not Found
+ * 404 Handler
  */
 app.all('*', handleNotFound);
 
@@ -116,12 +105,10 @@ app.all('*', handleNotFound);
 app.use(globalErrorHandler);
 
 /**
- * Graceful Shutdown Handler
+ * Graceful Shutdown
  */
 const gracefulShutdown = (signal) => {
   console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
-  
-  // Close server
   if (app.server) {
     app.server.close(() => {
       console.log('✅ HTTP server closed');
@@ -130,34 +117,24 @@ const gracefulShutdown = (signal) => {
   } else {
     process.exit(0);
   }
-  
-  // Force close after 10 seconds
   setTimeout(() => {
-    console.error('❌ Could not close connections in time, forcefully shutting down');
+    console.error('❌ Forced shutdown after timeout');
     process.exit(1);
   }, 10000);
 };
 
-// Handle shutdown signals
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('💥 UNCAUGHT EXCEPTION! Shutting down...');
-  console.error(err.name, err.message);
-  console.error(err.stack);
+  console.error('💥 UNCAUGHT EXCEPTION! Shutting down...', err);
   process.exit(1);
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('💥 UNHANDLED REJECTION! Shutting down...');
-  console.error(err.name, err.message);
+  console.error('💥 UNHANDLED REJECTION! Shutting down...', err);
   if (app.server) {
-    app.server.close(() => {
-      process.exit(1);
-    });
+    app.server.close(() => process.exit(1));
   } else {
     process.exit(1);
   }
