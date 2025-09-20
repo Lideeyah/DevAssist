@@ -24,7 +24,7 @@ import EditCode from "./editCode";
 import { OnboardState } from "@/types/onboarding";
 import { useAuth } from "@/hooks/use-auth";
 import SpitchSpeechToText from "./SpeachToText/spitchSpeechToText";
-import ConversationHistory, { Conversation } from "./ConversationHistory";
+import ConversationHistory, { Conversation } from "./conversationHistory";
 
 interface PromptHistory {
   prompt: string;
