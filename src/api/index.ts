@@ -56,12 +56,23 @@ class DevAssistAPI {
 
     try {
       const response = await fetch(url, options);
-      const result = await response.json();
 
-      console.log("response", response);
-      console.log("result", result);
-      // Example result: {success: true, message: 'User registered successfully', data: {...}}
+      // ✅ Read as text first (safe parsing)
+      const text = await response.text();
 
+      let result: any;
+      try {
+        result = JSON.parse(text);
+      } catch {
+        // Not JSON (e.g. Hugging Face warm-up message)
+        return {
+          success: false,
+          status: response.status,
+          error: text || "Unexpected server response. The backend may be starting up. Please try again in a moment.",
+        };
+      }
+
+      // ✅ Handle expired token case
       if (response.status === 401 && result.message?.includes("expired")) {
         const refreshed = await this.refreshAccessToken();
         if (refreshed) {
@@ -74,6 +85,7 @@ class DevAssistAPI {
         status: response.status,
         data: result.data,
         message: result.message,
+        error: result.error,
       };
     } catch (error) {
       return {
@@ -95,11 +107,19 @@ class DevAssistAPI {
       });
 
       if (response.ok) {
-        const result = (await response.json()) as {
-          data: { tokens: Tokens };
-        };
-        this.setTokens(result.data.tokens);
-        return true;
+        const text = await response.text();
+        let result: any;
+        try {
+          result = JSON.parse(text);
+        } catch {
+          console.error("Refresh returned invalid response:", text);
+          return false;
+        }
+
+        if (result?.data?.tokens) {
+          this.setTokens(result.data.tokens);
+          return true;
+        }
       }
     } catch (error) {
       console.error("Token refresh failed:", error);

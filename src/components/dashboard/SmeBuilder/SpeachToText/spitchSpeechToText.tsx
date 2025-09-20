@@ -366,6 +366,9 @@ interface SpitchSpeechToTextProps {
   language?: SpitchLang;
   timestampMode?: "sentence" | "word" | "none";
   autoTranslate?: boolean;
+  isAuthenticated?: boolean;
+  canRequest?: boolean;
+  isGenerating?: boolean;
 }
 
 const SpitchSpeechToText: React.FC<SpitchSpeechToTextProps> = ({
@@ -374,6 +377,9 @@ const SpitchSpeechToText: React.FC<SpitchSpeechToTextProps> = ({
   language = "en",
   timestampMode = "sentence",
   autoTranslate = true,
+  isAuthenticated = true,
+  canRequest = true,
+  isGenerating = false,
 }) => {
   const [listening, setListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -850,15 +856,24 @@ const SpitchSpeechToText: React.FC<SpitchSpeechToTextProps> = ({
     return new Blob([buffer], { type: "audio/wav" });
   };
 
+  const getButtonState = () => {
+    if (!isAuthenticated) return "Please login to use voice input";
+    if (!canRequest) return "Daily limit reached";
+    if (isGenerating) return "AI is busy processing";
+    if (disabled) return "Voice input disabled";
+    if (networkError) return "Network error - check connection";
+    return listening ? "Stop recording" : "Start recording";
+  };
+
   return (
     <div className="flex flex-col items-center gap-3">
       <button
         onClick={toggleListening}
-        disabled={disabled || isProcessing}
+        disabled={disabled || isProcessing || !isAuthenticated || isGenerating || !canRequest}
         className={`transition-colors ${listening ? " text-red-600 animate-pulse" : ""} ${
-          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          disabled || isProcessing || !isAuthenticated || isGenerating || !canRequest ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
         }`}
-        title={listening ? "Stop recording" : "Start recording"}
+        title={getButtonState()}
       >
         {networkError ? (
           <div className="flex flex-col items-center">
